@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Constructivist Page</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+      overflow: hidden;
+    }
+    .block {
+      position: absolute;
+      width: 120px;
+      height: 40px;
+      transform-origin: center center;
+      transition: transform 1s ease;
+    }
+    .red { background: #D72638; }
+    .black { background: #000; }
+    .yellow { background: #F4C300; }
+    .gray { background: #CCC; }
+  </style>
+</head>
+<body>
+
+  <div class="block red" style="top: 10%; left: 20%; transform: rotate(15deg);"></div>
+  <div class="block black" style="top: 30%; left: 50%; transform: rotate(-25deg); width: 150px;"></div>
+  <div class="block yellow" style="top: 60%; left: 40%; transform: rotate(10deg); height: 60px;"></div>
+  <div class="block gray" style="top: 80%; left: 70%; transform: rotate(-5deg); width: 100px;"></div>
+
+  <script>
+    // 简单碰撞感：周期性旋转
+    const blocks = document.querySelectorAll('.block');
+    setInterval(() => {
+      blocks.forEach(block => {
+        const angle = Math.random() * 90 - 45; // -45 到 +45 度
+        block.style.transform = `rotate(${angle}deg)`;
+      });
+    }, 2000);
+  </script>
+
+</body>
+</html>
