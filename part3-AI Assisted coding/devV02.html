@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Constructivism with p5.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  </head>
+  <body>
+    <script>
+      let blocks = [];
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        rectMode(CENTER);
+        noStroke();
+
+        // 初始化几个构成主义风格矩形
+        for (let i = 0; i < 8; i++) {
+          blocks.push({
+            x: random(width),
+            y: random(height),
+            w: random(80, 180),
+            h: random(20, 60),
+            angle: random(TWO_PI),
+            rotationSpeed: random(-0.01, 0.01),
+            color: random([
+              color(215, 38, 56),    // 红
+              color(0),              // 黑
+              color(244, 195, 0),    // 黄
+              color(200),            // 灰
+              color(255)             // 白
+            ])
+          });
+        }
+      }
+
+      function draw() {
+        background(240);
+
+        for (let b of blocks) {
+          push();
+          translate(b.x, b.y);
+          rotate(b.angle);
+          fill(b.color);
+          rect(0, 0, b.w, b.h);
+          pop();
+
+          // 旋转更新
+          b.angle += b.rotationSpeed;
+        }
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+      }
+    </script>
+  </body>
+</html>
