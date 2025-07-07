@@ -1,16 +1,201 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <title>Suprematism Interaction</title>
-    <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'Roboto', sans-serif;
+        background-color: #ffffff;
+        color: #111;
+      }
+      canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+      }
+
+      .text-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        width: 100%;
+        pointer-events: none; /* 允许点击穿透到 canvas */
+      }
+
+      .top-left {
+        font-family: 'Roboto', sans-serif;  /* Set the font to Roboto, with sans-serif as backup */
+        position: absolute;
+        top: 24px;
+        left: 32px;
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.5;
+        letter-spacing: 0.02em;
+      }
+
+      .center-title {
+        position: absolute;
+        top: clamp(5rem, 15vh, 12rem);
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+    </style>
   </head>
   <body>
-    <div class="typography">
-      <h1 ondblclick="hideTitle()">SUPREMATISM INTERACTION</h1>
-      <p>Click to add · Hold to scale · Drag to move · Double-click to delete</p>
+
+    <!-- 文字叠加层 -->
+    <div class="text-overlay">
+      <div class="right">
+        Columbia GSAPP<br>
+        Computational Design Practices<br>
+        Project Archive<br>
+        Yuhang Qiu
+      </div>
+      <!-- <div class="right"><a href="https://github.com/isohale/cdw-public">About</a></div> -->
+      <div class="center-title">
+        SUPREMATISM IN INTERACTION
+      </div>
     </div>
-    <script src="sketch.js"></script>
+
+    <!-- p5.js script -->
+    <script>
+      let blocks = [];
+      let selectedBlock = null;
+      let isDragging = false;
+      let isScaling = false;
+      let scalingTarget = null;
+      let pressStartTime = 0;
+      let pressStartPos = null;
+
+      const palette = [
+        [215, 38, 56],   // Red
+        [0, 0, 0],       // Black
+        [255, 255, 255], // White
+        [244, 195, 0],   // Yellow
+        [36, 70, 142],   // Blue
+        [160, 160, 160]  // Gray
+      ];
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        rectMode(CENTER);
+        angleMode(RADIANS);
+        noStroke();
+
+        for (let i = 0; i < 8; i++) {
+          blocks.push(generateRandomBlock(random(width), random(height)));
+        }
+      }
+
+      function draw() {
+        background(240);
+
+        for (let b of blocks) {
+          push();
+          translate(b.x, b.y);
+          rotate(b.angle);
+          fill(b.color);
+          rect(0, 0, b.w, b.h);
+          pop();
+
+          b.angle += b.rotationSpeed;
+        }
+
+        if (selectedBlock && !isDragging && !isScaling) {
+          if (millis() - pressStartTime > 600) {
+            isScaling = true;
+            scalingTarget = selectedBlock;
+          }
+        }
+
+        if (isScaling && scalingTarget) {
+          scalingTarget.w *= 1.01;
+          scalingTarget.h *= 1.01;
+        }
+      }
+
+      function mousePressed() {
+        selectedBlock = getBlockUnderMouse();
+        isDragging = false;
+        isScaling = false;
+        scalingTarget = null;
+        pressStartTime = millis();
+        pressStartPos = createVector(mouseX, mouseY);
+      }
+
+      function mouseDragged() {
+        if (selectedBlock) {
+          let moved = dist(mouseX, mouseY, pressStartPos.x, pressStartPos.y);
+          if (moved > 5) {
+            isDragging = true;
+            isScaling = false;
+            scalingTarget = null;
+            selectedBlock.x = mouseX;
+            selectedBlock.y = mouseY;
+          }
+        }
+      }
+
+      function mouseReleased() {
+        selectedBlock = null;
+        isDragging = false;
+        isScaling = false;
+        scalingTarget = null;
+      }
+
+      function doubleClicked() {
+        let b = getBlockUnderMouse();
+        if (b) {
+          blocks = blocks.filter(x => x !== b);
+        }
+      }
+
+      function mouseClicked() {
+        if (!getBlockUnderMouse()) {
+          blocks.push(generateRandomBlock(mouseX, mouseY));
+        }
+      }
+
+      function generateRandomBlock(x, y) {
+        let w = random(80, 280);
+        let h = random(40, 180);
+        let angle = random(-PI / 4, PI / 4);
+        let col = color(...random(palette));
+        let rotationSpeed = random(-0.005, 0.005);
+        return { x, y, w, h, angle, color: col, rotationSpeed };
+      }
+
+      function getBlockUnderMouse() {
+        for (let i = blocks.length - 1; i >= 0; i--) {
+          let b = blocks[i];
+          let dx = mouseX - b.x;
+          let dy = mouseY - b.y;
+          let angle = -b.angle;
+          let rx = dx * cos(angle) - dy * sin(angle);
+          let ry = dx * sin(angle) + dy * cos(angle);
+          if (abs(rx) <= b.w / 2 && abs(ry) <= b.h / 2) {
+            return b;
+          }
+        }
+        return null;
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+      }
+    </script>
   </body>
 </html>
