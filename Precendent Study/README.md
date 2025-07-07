@@ -1,1 +1,2 @@
-Assignment 1 - First repo + website
+Precendent Study
+Week 1
