@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Constructivist + Swiss Typography</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #f4f4f4;
+        font-family: 'Helvetica Neue', sans-serif;
+      }
+      canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+      }
+      .typography {
+        position: absolute;
+        top: 10vh;
+        left: 5vw;
+        width: 90vw;
+        color: black;
+        z-index: 10;
+        pointer-events: none;
+      }
+      .typography h1 {
+        font-size: 6vw;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: -0.05em;
+        margin: 0;
+      }
+      .typography p {
+        font-size: 2vw;
+        max-width: 600px;
+        margin-top: 1em;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  </head>
+  <body>
+    <div class="typography">
+      <h1>MODERNISM IN MOTION</h1>
+      <p>Constructivist geometry meets Swiss typography.</p>
+    </div>
+
+    <script>
+      let blocks = [];
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        rectMode(CENTER);
+        noStroke();
+
+        for (let i = 0; i < 8; i++) {
+          blocks.push({
+            x: random(width),
+            y: random(height),
+            w: random(80, 180),
+            h: random(20, 60),
+            angle: random(TWO_PI),
+            rotationSpeed: random(-0.01, 0.01),
+            color: random([
+              color(215, 38, 56),
+              color(0),
+              color(244, 195, 0),
+              color(200),
+              color(255)
+            ])
+          });
+        }
+      }
+
+      function draw() {
+        background(240);
+
+        for (let b of blocks) {
+          push();
+          translate(b.x, b.y);
+          rotate(b.angle);
+          fill(b.color);
+          rect(0, 0, b.w, b.h);
+          pop();
+
+          b.angle += b.rotationSpeed;
+        }
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+      }
+    </script>
+  </body>
+</html>
