@@ -52,6 +52,17 @@
         font-weight: 700;
         letter-spacing: -0.02em;
       }
+      .ps {
+        position: absolute;
+        top: clamp(12rem, 22vh, 19rem);
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: darkgray;
+      }
     </style>
   </head>
   <body>
@@ -67,6 +78,9 @@
       <!-- <div class="right"><a href="https://github.com/isohale/cdw-public">About</a></div> -->
       <div class="center-title">
         SUPREMATISM IN INTERACTION
+      </div>
+      <div class="ps">
+        Refresh  ·  Click  ·  Hold  ·  Drag  ·  Double-click
       </div>
     </div>
 
@@ -170,8 +184,8 @@
       }
 
       function generateRandomBlock(x, y) {
-        let w = random(80, 280);
-        let h = random(40, 180);
+        let w = random(80, 600);
+        let h = random(40, 250);
         let angle = random(-PI / 4, PI / 4);
         let col = color(...random(palette));
         let rotationSpeed = random(-0.005, 0.005);
