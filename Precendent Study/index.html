@@ -1,33 +1,199 @@
-<!DOCTYPE html>                      <!-- Declares this is an HTML5 document -->
-<html lang="en">                     <!-- Root element, lang="en" specifies English language -->
-<head>                               <!-- Contains metadata about the page (not visible) -->
-  <meta charset="UTF-8">             <!-- Sets character encoding for special characters -->
-  <title>Module 1</title>            <!-- Title that appears in browser tab -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">  <!-- Load Google Fonts -->
-  <link rel="stylesheet" href="style.css">  <!-- Links to our CSS file for styling -->
-</head>
-<body>                               <!-- Contains all visible content on the page -->
-  <header>                           <!-- Header section for navigation/branding -->
-    <div class="left">Columbia GSAPP</div>  <!-- Left side of header with institution name -->
-    <div class="center">             <!-- Center section of header -->
-      Computational Design Practices<br>    <!-- Main title with line break -->
-      <span>Project Archive</span>   <!-- Subtitle in smaller text -->
-    </div>
-    <div class="right"><a href="#">About</a></div>  <!-- Right side with navigation link -->
-  </header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Precedent Study: SEEK (1969–70) by Nicholas Negroponte</title>
+  <style>
+    :root {
+      --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      --bg: #fff;
+      --text: #000;
+      --border: #ddd;
+      --accent: #000;
+    }
 
-  <main>                             <!-- Main content area of the page -->
-    <div class="project-meta">2025</div>     <!-- Project year/date -->
-    <div class="project-title">Project Title</div>  <!-- Main project title -->
-    <div class="project-subtitle">Yuhang Qiu</div>  <!-- Student name as subtitle -->
-    
-    <!-- Content sections -->
-    <div class="section-title">Interactive Demo</div>  <!-- Section heading -->
-    <p>Click the button below to see JavaScript in action:</p>  <!-- Instructions for user -->
-    <button id="demoButton">Click Me!</button>  <!-- Interactive button with unique ID -->
-    <div id="messageDisplay"></div>  <!-- Empty container for JavaScript to fill with messages -->
-  </main>
-  
-  <script src="script.js"></script>  <!-- Links to our JavaScript file for interactivity -->
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 3rem 4rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      color: darkgray;
+    }
+    h1-2 {
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    h1-3 {
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    p.intro {
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+      max-width: 750px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      border-left: 5px solid var(--accent);
+      padding-left: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      margin-bottom: 3rem;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f8f8f8;
+      font-weight: 600;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    a:hover {
+      background-color: var(--accent);
+      color: var(--bg);
+      text-decoration: none;
+      transition: all 0.2s ease-in-out;
+    }
+
+    i {
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>Precedent Study:</h1>
+  <h1-2>SEEK<br></h1-2>
+  <h1-3>by Nicholas Negroponte</h1-3>
+  <div style="margin-top: 2.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem;">
+    <p class="intro" style="flex: 1;">
+      Created in 1969–70 by the Architecture Machine Group at MIT, SEEK was an experimental cybernetic installation
+      that placed gerbils and robotic intelligence in the same interactive environment. The system was designed to test
+      how a computer-controlled robotic arm would respond to unpredictable changes made by the gerbils within a 3D
+      block city. It revealed the limits of programmed logic when confronted with organic behavior and laid groundwork
+      for interactive, behavioral computation in design environments.
+    </p>
+    <img src="image.jpg" alt="SEEK installation" width="230" height="280" style="object-fit: cover; border: 1px solid #ccc;" />
+  </div>
+
+  <h2>Project Datasheet</h2>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Title</td><td>SEEK</td></tr>
+    <tr><td>Author</td><td>Nicholas Negroponte with the Architecture Machine Group</td></tr>
+    <tr><td>Year</td><td>1969–1970</td></tr>
+    <tr><td>Format</td><td>Interactive robotic installation / cybernetic sculpture</td></tr>
+    <tr><td>Audience</td><td>Public audience of the 1970 <i>Software</i> exhibition; researchers, designers, technologists</td></tr>
+    <tr><td>Institution</td><td>MIT – Architecture Machine Group</td></tr>
+    <tr><td>Exhibited</td><td><i>Software</i> (1970), Jewish Museum, New York, curated by Jack Burnham</td></tr>
+    <tr><td>Medium</td><td>Plexiglass cage, metallic blocks, robotic gantry arm with electromagnet, live gerbils</td></tr>
+    <tr><td>Key Concepts</td><td>Cybernetics, interactivity, feedback systems, behavioral unpredictability, computational agency</td></tr>
+    <tr><td>Related Projects</td><td>URBAN (urban simulation system), PICTUREPHONE (early telecommunication interface)</td></tr>
+  </table>
+
+  <h2>Writings by the Author(s)</h2>
+  <table>
+    <tr><th>Title & Author</th><th>Summary</th><th>Source Link</th></tr>
+    <tr>
+      <td><i>The Architecture Machine</i>, Nicholas Negroponte (1970)</td>
+      <td>Introduces SEEK as part of a vision for human-machine co-design environments.</td>
+      <td><a href="https://mitpress.mit.edu/9780262640266/the-architecture-machine/" target="_blank">MIT Press</a></td>
+    </tr>
+    <tr>
+      <td><i>Soft Architecture Machines</i>, Nicholas Negroponte (1975)</td>
+      <td>Expands on SEEK’s behavioral logic and reflects on machine learning in design.</td>
+      <td><a href="https://mitpress.mit.edu/9780262640280/soft-architecture-machines/" target="_blank">MIT Press</a></td>
+    </tr>
+    <tr>
+      <td>"Toward a Humanism through Machines," <i>Perspecta</i> (1967)</td>
+      <td>Theoretical foundation of Architecture Machine ideas; pre-dates SEEK.</td>
+      <td><a href="https://www.jstor.org/stable/1566875" target="_blank">JSTOR</a></td>
+    </tr>
+    <tr>
+      <td><i>SEEK Internal Documentation</i>, MIT Museum Archives</td>
+      <td>Technical drawings, gantry robot specs, and experiment photos.</td>
+      <td><a href="https://mitmuseum.mit.edu/collections" target="_blank">MIT Museum Archives</a></td>
+    </tr>
+  </table>
+
+  <h2>Appraisals or Criticisms by Others</h2>
+  <table>
+    <tr><th>Title & Author</th><th>Summary</th><th>Source Link</th></tr>
+    <tr>
+      <td>"Gerbils ex Machina," Thomas Hess, <i>Art News</i> (1970)</td>
+      <td>Critique of SEEK’s failure; reflection on techno-art expectations.</td>
+      <td><a href="https://www.artnews.com/" target="_blank">Art News Archive</a></td>
+    </tr>
+    <tr>
+      <td><i>Software</i> Exhibition Catalog, Jack Burnham (1970)</td>
+      <td>Curatorial framing of SEEK as software-based conceptual art.</td>
+      <td><a href="https://primaryinformation.org/product/software/" target="_blank">Primary Information</a></td>
+    </tr>
+    <tr>
+      <td><i>Digital Visions</i>, Cynthia Goodman (1987)</td>
+      <td>Contextualizes SEEK within digital art history.</td>
+      <td><a href="https://www.worldcat.org/title/14910956" target="_blank">WorldCat</a></td>
+    </tr>
+    <tr>
+      <td><i>Art and the Future</i>, Douglas Davis (1973)</td>
+      <td>Documentation of SEEK’s MIT lab photos and its cybernetic ideals.</td>
+      <td><a href="https://archive.org/details/artandfuture0000davi" target="_blank">Internet Archive</a></td>
+    </tr>
+    <tr>
+      <td>"From Cybernation to Interaction," Erkki Huhtamo, in <i>The Digital Dialectic</i> (1999)</td>
+      <td>Analyzes SEEK as part of interactive media history.</td>
+      <td><a href="https://mitpress.mit.edu/9780262621371/the-digital-dialectic/" target="_blank">MIT Press</a></td>
+    </tr>
+    <tr>
+      <td><i>Architecture School</i>, Joan Ockman (2012)</td>
+      <td>Notes SEEK’s influence on design pedagogy and computation.</td>
+      <td><a href="https://mitpress.mit.edu/9780262017082/architecture-school/" target="_blank">MIT Press</a></td>
+    </tr>
+    <tr>
+      <td><i>Life After New Media</i>, Kember & Zylinska (2012)</td>
+      <td>Considers SEEK a precursor to media-as-process models.</td>
+      <td><a href="https://mitpress.mit.edu/9780262017556/life-after-new-media/" target="_blank">MIT Press</a></td>
+    </tr>
+  </table>
 </body>
 </html>
