@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Suprematism Interaction</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      let blocks = [];
+      let selectedBlock = null;
+      let isDragging = false;
+      let pressStartTime = 0;
+      let pressStartPos = null;
+
+      const palette = [
+        [215, 38, 56],   // Red
+        [0, 0, 0],       // Black
+        [255, 255, 255], // White
+        [244, 195, 0],   // Yellow
+        [36, 70, 142],   // Blue
+        [160, 160, 160]  // Gray
+      ];
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        rectMode(CENTER);
+        angleMode(RADIANS);
+        noStroke();
+
+        // 初始生成一些矩形（参考之前搭配）
+        for (let i = 0; i < 8; i++) {
+          blocks.push(generateRandomBlock(random(width), random(height)));
+        }
+      }
+
+      function draw() {
+        background(240);
+        for (let b of blocks) {
+          push();
+          translate(b.x, b.y);
+          rotate(b.angle);
+          fill(b.color);
+          rect(0, 0, b.w, b.h);
+          pop();
+
+          // 让每个矩形持续自转
+          b.angle += b.rotationSpeed;
+        }
+
+        // 放大逻辑
+        if (selectedBlock && !isDragging && millis() - pressStartTime > 600) {
+          selectedBlock.w *= 1.05;
+          selectedBlock.h *= 1.05;
+          pressStartTime = millis(); // 控制放大速度
+        }
+      }
+
+      function mousePressed() {
+        selectedBlock = getBlockUnderMouse();
+        isDragging = false;
+        pressStartTime = millis();
+        pressStartPos = createVector(mouseX, mouseY);
+      }
+
+      function mouseDragged() {
+        if (selectedBlock) {
+          let moved = dist(mouseX, mouseY, pressStartPos.x, pressStartPos.y);
+          if (moved > 5) {
+            isDragging = true;
+            selectedBlock.x = mouseX;
+            selectedBlock.y = mouseY;
+          }
+        }
+      }
+
+      function mouseReleased() {
+        selectedBlock = null;
+        isDragging = false;
+      }
+
+      function doubleClicked() {
+        let b = getBlockUnderMouse();
+        if (b) {
+          blocks = blocks.filter(x => x !== b);
+        }
+      }
+
+      function mouseClicked() {
+        if (!getBlockUnderMouse()) {
+          blocks.push(generateRandomBlock(mouseX, mouseY));
+        }
+      }
+
+      function generateRandomBlock(x, y) {
+        let w = random(60, 600);
+        let h = random(20, 250);
+        let angle = random(-PI / 4, PI / 4);
+        let col = color(...random(palette));
+        let rotationSpeed = random(-0.005, 0.005); // 缓慢旋转
+        return { x, y, w, h, angle, color: col, rotationSpeed };
+      }
+
+      function getBlockUnderMouse() {
+        for (let i = blocks.length - 1; i >= 0; i--) {
+          let b = blocks[i];
+          let dx = mouseX - b.x;
+          let dy = mouseY - b.y;
+          let angle = -b.angle;
+          let rx = dx * cos(angle) - dy * sin(angle);
+          let ry = dx * sin(angle) + dy * cos(angle);
+          if (abs(rx) <= b.w / 2 && abs(ry) <= b.h / 2) {
+            return b;
+          }
+        }
+        return null;
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+      }
+    </script>
+  </body>
+</html>
