@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Suprematism Interaction</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      let blocks = [];
+      let selectedBlock = null;
+      let isDragging = false;
+      let pressStartTime = 0;
+      let pressStartPos = null;
+
+      const palette = [
+        [215, 38, 56],   // Red
+        [0, 0, 0],       // Black
+        [255, 255, 255], // White
+        [244, 195, 0],   // Yellow
+        [36, 70, 142],   // Blue
+        [160, 160, 160]  // Gray
+      ];
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        rectMode(CENTER);
+        angleMode(RADIANS);
+        noStroke();
+      }
+
+      function draw() {
+        background(240);
+        for (let b of blocks) {
+          push();
+          translate(b.x, b.y);
+          rotate(b.angle);
+          fill(b.color);
+          rect(0, 0, b.w, b.h);
+          pop();
+        }
+
+        // 如果按住不动 600ms 后且未拖动 → 放大
+        if (selectedBlock && !isDragging && millis() - pressStartTime > 600) {
+          selectedBlock.w *= 1.05;
+          selectedBlock.h *= 1.05;
+          pressStartTime = millis(); // 避免持续增长太快
+        }
+      }
+
+      function mousePressed() {
+        selectedBlock = getBlockUnderMouse();
+        isDragging = false;
+        pressStartTime = millis();
+        pressStartPos = createVector(mouseX, mouseY);
+      }
+
+      function mouseDragged() {
+        if (selectedBlock) {
+          let moved = dist(mouseX, mouseY, pressStartPos.x, pressStartPos.y);
+          if (moved > 5) {
+            isDragging = true;
+            selectedBlock.x = mouseX;
+            selectedBlock.y = mouseY;
+          }
+        }
+      }
+
+      function mouseReleased() {
+        selectedBlock = null;
+        isDragging = false;
+      }
+
+      function doubleClicked() {
+        let b = getBlockUnderMouse();
+        if (b) {
+          blocks = blocks.filter(x => x !== b);
+        }
+      }
+
+      function mouseClicked() {
+        // 若未点击在任何矩形上 → 添加新矩形
+        if (!getBlockUnderMouse()) {
+          let w = random(60, 160);
+          let h = random(20, 100);
+          let angle = random(-PI / 4, PI / 4);
+          let col = color(...random(palette));
+          blocks.push({
+            x: mouseX,
+            y: mouseY,
+            w,
+            h,
+            angle,
+            color: col
+          });
+        }
+      }
+
+      function getBlockUnderMouse() {
+        // 倒序遍历：优先选中最上面的
+        for (let i = blocks.length - 1; i >= 0; i--) {
+          let b = blocks[i];
+          let dx = mouseX - b.x;
+          let dy = mouseY - b.y;
+          let angle = -b.angle;
+          let rx = dx * cos(angle) - dy * sin(angle);
+          let ry = dx * sin(angle) + dy * cos(angle);
+          if (abs(rx) <= b.w / 2 && abs(ry) <= b.h / 2) {
+            return b;
+          }
+        }
+        return null;
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+      }
+    </script>
+  </body>
+</html>
