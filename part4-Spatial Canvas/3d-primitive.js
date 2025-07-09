@@ -1,46 +1,69 @@
-// three-sketch.js
-// This script creates a Three.js scene with a rotating box on a wireframe grid
-
-(function() {
-  // Scene, camera, renderer setup
+(function () {
+  // Setup
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, 800 / 400, 0.1, 1000);
+  const camera = new THREE.PerspectiveCamera(70, 800 / 400, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(800, 400);
-  renderer.setClearColor(0xf0f0f0); // Light gray background
-
+  renderer.setClearColor(0x000000); // Deep black background
   document.getElementById('threejs-container-1').appendChild(renderer.domElement);
 
-  // Add ambient light
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  // Lights
+  const pointLight = new THREE.PointLight(0x88ccff, 1.5, 100);
+  pointLight.position.set(0, 0, 0);
+  scene.add(pointLight);
+
+  const ambientLight = new THREE.AmbientLight(0x222222); // subtle fill
   scene.add(ambientLight);
 
-  // Add directional light
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  directionalLight.position.set(5, 10, 7);
-  scene.add(directionalLight);
+  // Geometry setup
+  const count = 120;
+  const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x66ffff,
+    metalness: 0.5,
+    roughness: 0.3,
+    emissive: 0x222244,
+    emissiveIntensity: 0.5,
+  });
 
-  // Create a wireframe grid
-  const gridHelper = new THREE.GridHelper(10, 20, 0x888888, 0x888888);
-  scene.add(gridHelper);
+  const mesh = new THREE.InstancedMesh(geometry, material, count);
+  scene.add(mesh);
 
-  // Create a box
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
-  const material = new THREE.MeshPhongMaterial({ color: 0x3264a8, shininess: 100 });
-  const box = new THREE.Mesh(geometry, material);
-  box.position.y = 0.5; // Sit on top of the grid
-  scene.add(box);
+  const dummy = new THREE.Object3D();
 
-  // Position the camera
-  camera.position.set(3, 3, 5);
-  camera.lookAt(0, 0.5, 0);
+  // Camera motion parameters
+  let t = 0;
 
-  // Animation loop
   function animate() {
     requestAnimationFrame(animate);
-    box.rotation.x += 0.01;
-    box.rotation.y += 0.01;
+    t += 0.01;
+
+    for (let i = 0; i < count; i++) {
+      const angle = i * 0.2 + t;
+      const radius = 1.5 + i * 0.015;
+      const y = Math.sin(i * 0.1 + t) * 1.2;
+
+      dummy.position.set(
+        Math.cos(angle) * radius,
+        y,
+        Math.sin(angle) * radius
+      );
+
+      dummy.rotation.set(angle * 0.3, angle * 0.2, 0);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    }
+
+    mesh.instanceMatrix.needsUpdate = true;
+
+    // Camera slow orbit
+    camera.position.x = Math.cos(t * 0.2) * 5;
+    camera.position.z = Math.sin(t * 0.2) * 5;
+    camera.position.y = Math.sin(t * 0.1) * 1.5;
+    camera.lookAt(0, 0, 0);
+
     renderer.render(scene, camera);
   }
+
   animate();
-})(); 
+})();
