@@ -22,7 +22,9 @@ header {
 
 /* Style the left section of the header */
 header .left {
-  color: #aaa;                        /* Set text color to light gray */
+  color: #aaa;
+  text-decoration: none;              /* Remove the underline from links */
+  font-weight: 400;                        /* Set text color to light gray */
 }
 
 /* Style the center section of the header */
