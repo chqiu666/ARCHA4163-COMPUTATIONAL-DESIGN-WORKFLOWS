@@ -1,91 +1,92 @@
 (function () {
-  // Setup
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, 800 / 400, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(800, 400);
-  renderer.setClearColor(0x000000, 1); // Black background
-
+  renderer.setClearColor(0x000000, 0);
   document.getElementById('threejs-container-2').appendChild(renderer.domElement);
 
-  // Lights
-  const ambientLight = new THREE.AmbientLight(0xccccff, 0.6);
-  scene.add(ambientLight);
-
-  const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-  pointLight.position.set(0, 5, 10);
+  // Lighting
+  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambient);
+  const pointLight = new THREE.PointLight(0xaaccff, 1.2);
+  pointLight.position.set(10, 10, 10);
   scene.add(pointLight);
 
-  // Transparent sphere material
-  const sphereMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x88ccff,
-    transparent: true,
-    opacity: 0.4,
-    roughness: 0.2,
-    metalness: 0.3,
-    clearcoat: 1,
-    clearcoatRoughness: 0,
+  // Central sphere
+  const centralGeo = new THREE.SphereGeometry(2, 64, 64);
+  const centralMat = new THREE.MeshPhysicalMaterial({
+    color: 0x88ccee,
+    metalness: 0.1,
+    roughness: 0,
+    transmission: 0.9,
+    thickness: 1.0
+  });
+  const centralSphere = new THREE.Mesh(centralGeo, centralMat);
+  scene.add(centralSphere);
+
+  // Orbiting spheres
+  const orbitGroup = new THREE.Group();
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const orbGeo = new THREE.SphereGeometry(0.3, 32, 32);
+    const orbMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.6,
+      roughness: 0.3
+    });
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    orb.position.set(Math.cos(angle) * 4, Math.sin(angle) * 1.5, Math.sin(angle) * 4);
+    orbitGroup.add(orb);
+  }
+  scene.add(orbitGroup);
+
+  // Camera
+  camera.position.set(6, 4, 6);
+  const target = new THREE.Vector3(0, 0, 0);
+  camera.lookAt(target);
+
+  // Mouse drag rotation
+  let isDragging = false;
+  let previousMouse = { x: 0, y: 0 };
+  let rotation = { x: 0.5, y: 0.5 };
+
+  const dom = renderer.domElement;
+  dom.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    previousMouse = { x: e.clientX, y: e.clientY };
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - previousMouse.x;
+    const deltaY = e.clientY - previousMouse.y;
+    rotation.y += deltaX * 0.005;
+    rotation.x += deltaY * 0.005;
+    previousMouse = { x: e.clientX, y: e.clientY };
   });
 
-  // Initial floating sphere
-  const spheres = [];
-  const sphereGeometry = new THREE.SphereGeometry(0.6, 32, 32);
-
-  function addFloatingSphere(x = 0, y = 1, z = 0) {
-    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial.clone());
-    sphere.position.set(x, y, z);
-    sphere.userData.phase = Math.random() * Math.PI * 2;
-    scene.add(sphere);
-    spheres.push(sphere);
-  }
-
-  // Add a few to start
-  for (let i = 0; i < 5; i++) {
-    addFloatingSphere(
-      Math.random() * 6 - 3,
-      Math.random() * 2 + 1,
-      Math.random() * 6 - 3
-    );
-  }
-
-  // Camera & controls
-  camera.position.set(6, 6, 6);
-  camera.lookAt(0, 1, 0);
-
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.target.set(0, 1, 0);
-
-  // Handle click to add spheres
-  renderer.domElement.addEventListener("click", (event) => {
-    const rect = renderer.domElement.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    const mouse = new THREE.Vector2(x, y);
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObject(new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshBasicMaterial()), true);
-    const point = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(5));
-    addFloatingSphere(point.x, point.y, point.z);
-  });
-
-  // Animation loop
-  let time = 0;
+  // Animate
   function animate() {
     requestAnimationFrame(animate);
-    time += 0.01;
 
-    spheres.forEach((s, i) => {
-      const t = time + s.userData.phase;
-      s.position.y += Math.sin(t) * 0.01;
-      s.rotation.y += 0.01;
-      s.rotation.x += 0.005;
-    });
+    // Auto-rotation
+    if (!isDragging) {
+      rotation.y += 0.001;
+    }
 
-    controls.update();
+    // Apply rotation
+    const radius = 10;
+    const x = radius * Math.sin(rotation.y) * Math.cos(rotation.x);
+    const y = radius * Math.sin(rotation.x);
+    const z = radius * Math.cos(rotation.y) * Math.cos(rotation.x);
+    camera.position.set(x, y, z);
+    camera.lookAt(target);
+
+    orbitGroup.rotation.y += 0.002;
+    orbitGroup.rotation.x += 0.0005;
+
     renderer.render(scene, camera);
   }
 

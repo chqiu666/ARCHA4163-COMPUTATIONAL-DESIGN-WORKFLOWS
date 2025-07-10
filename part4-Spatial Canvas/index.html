@@ -10,26 +10,29 @@
 
   <!-- ------------------------------------------------------------ -->
   <!-- Load Three.js library from CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r149/three.min.js"></script>
   <!-- This loads the Three.js library which provides functions for creating 3D graphics -->
   
   <!-- Load Three.js OrbitControls from CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <!-- This loads the OrbitControls module for interactive camera controls -->
-  <!-- ------------------------------------------------------------ -->
+  <!-- 1. 引入 Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 
-  <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/PLYLoader.js"></script> -->
+<!-- 2. 正确引入 TrackballControls（注意：不能用 .min.js，要用原版 .js） -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/controls/TrackballControls.js"></script>
+
+
+  <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script> -->
+  <!--<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/PLYLoader.js"></script> -->
   <!-- Stable Three.js r149 before module-only transition -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/controls/OrbitControls.js"></script> -->
 
-  <script src="PLYLoader.js"></script>
+  <!-- <script src="PLYLoader.js"></script> -->
 
   <!-- This loads the Three.js library and the PLYLoader module for loading PLY files in Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script> -->
 
   <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/PLYLoader.js"></script> -->
   <!-- This loads the PLYLoader module for loading PLY files in Three.js -->
@@ -119,8 +122,8 @@
     <div id="threejs-container-1"></div>
   
     <!-- Section for second Three.js sketch (orbit-camera.js) --> 
-    <div class="section-title">Interactive 3D Scene with Orbit Controls</div>
-    <p>An interactive Three.js scene with multiple 3D primitives (box, sphere, cylinder, cone) and orbit camera controls for navigation.</p>
+    <div class="section-title">Interactive 3D Scene</div>
+    <p>An dragable interactive Three.js scene.</p>
     
     <!-- Canvas container for second Three.js sketch (orbit-camera.js) --> 
     <div id="threejs-container-2"></div>
@@ -134,10 +137,10 @@
 
     <!-- ------------------------------------------------------------ -->
     
-    <div class="section-title">Digital Object 1: Spatial Canvases</div>
+    <!-- <div class="section-title">Digital Object 1: Spatial Canvases</div> -->
     <!-- Section heading for the p5.js canvas demonstration -->
     
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    <!-- <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p> -->
     <!-- Introduction to the first section -->
 
 
@@ -178,7 +181,7 @@
 
   <script src="3d-primitive.js"></script>
   <script src="orbit-camera.js"></script>
-  <script src="atmospheric-geometry.js"></script>
+  <!-- <script src="atmospheric-geometry.js"></script> -->
 
   <!-- ------------------------------------------------------------ -->
 
@@ -186,7 +189,7 @@
 
   <script src="2d-drawing.js"></script>
   <script src="bouncing-ball.js"></script>
-  <script src="zoom-pan.js"></script>
+  <!-- <script src="zoom-pan.js"></script> -->
 
   <!-- ------------------------------------------------------------ -->
 
