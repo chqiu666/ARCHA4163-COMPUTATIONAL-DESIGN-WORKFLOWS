@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Frame Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        svg {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Process Frame / Motion Frame Visualization</h1>
+    <svg id="visualization" width="800" height="400"></svg>
+
+    <script>
+        const svg = d3.select("#visualization");
+        const width = +svg.attr("width");
+        const height = +svg.attr("height");
+
+        // Sample data for frames
+        const frames = [
+            { time: 0, value: 10 },
+            { time: 1, value: 20 },
+            { time: 2, value: 15 },
+            { time: 3, value: 25 },
+            { time: 4, value: 30 },
+            { time: 5, value: 20 }
+        ];
+
+        // Scales
+        const xScale = d3.scaleLinear()
+            .domain([0, d3.max(frames, d => d.time)])
+            .range([50, width - 50]);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(frames, d => d.value)])
+            .range([height - 50, 50]);
+
+        // Axes
+        const xAxis = d3.axisBottom(xScale).ticks(frames.length);
+        const yAxis = d3.axisLeft(yScale);
+
+        svg.append("g")
+            .attr("transform", `translate(0, ${height - 50})`)
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("transform", `translate(50, 0)`)
+            .call(yAxis);
+
+        // Line generator
+        const line = d3.line()
+            .x(d => xScale(d.time))
+            .y(d => yScale(d.value))
+            .curve(d3.curveMonotoneX);
+
+        // Draw line
+        svg.append("path")
+            .datum(frames)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+        // Draw points
+        svg.selectAll(".point")
+            .data(frames)
+            .enter()
+            .append("circle")
+            .attr("class", "point")
+            .attr("cx", d => xScale(d.time))
+            .attr("cy", d => yScale(d.value))
+            .attr("r", 5)
+            .attr("fill", "orange");
+    </script>
+</body>
+</html>

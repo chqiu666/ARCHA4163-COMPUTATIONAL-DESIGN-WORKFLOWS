@@ -1,83 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Process Frame Visualization</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        svg {
-            border: 1px solid #ccc;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>NYC Vehicle Collision Contour</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/d3-contour.v2.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f8f8;
+      padding: 40px;
+    }
+    #description {
+      max-width: 960px;
+      margin-bottom: 30px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      display: block;
+    }
+  </style>
 </head>
 <body>
-    <h1>Process Frame / Motion Frame Visualization</h1>
-    <svg id="visualization" width="800" height="400"></svg>
+  <div id="description">
+    <h2>Contour Map of NYC Motor Vehicle Collisions</h2>
+    <p>
+      This contour visualization shows a smoothed heatmap of vehicle collision density in NYC.
+      It uses a high-resolution grid, blur smoothing, and dynamically computed thresholds and colors to generate a rich and accurate visual map.
+    </p>
+  </div>
 
-    <script>
-        const svg = d3.select("#visualization");
-        const width = +svg.attr("width");
-        const height = +svg.attr("height");
+  <canvas id="contourCanvas" width="1000" height="800"></canvas>
 
-        // Sample data for frames
-        const frames = [
-            { time: 0, value: 10 },
-            { time: 1, value: 20 },
-            { time: 2, value: 15 },
-            { time: 3, value: 25 },
-            { time: 4, value: 30 },
-            { time: 5, value: 20 }
-        ];
+  <script>
+    const width = 1000, height = 800;
+    const context = d3.select("#contourCanvas").node().getContext("2d");
 
-        // Scales
-        const xScale = d3.scaleLinear()
-            .domain([0, d3.max(frames, d => d.time)])
-            .range([50, width - 50]);
+    // Simple blur function (box blur)
+    function blurDensity(grid, width, height, radius = 3) {
+      const blurred = new Array(width * height).fill(0);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          let sum = 0, count = 0;
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                sum += grid[ny * width + nx];
+                count++;
+              }
+            }
+          }
+          blurred[y * width + x] = sum / count;
+        }
+      }
+      return blurred;
+    }
 
-        const yScale = d3.scaleLinear()
-            .domain([0, d3.max(frames, d => d.value)])
-            .range([height - 50, 50]);
+    d3.csv("Motor_Vehicle_Collisions.csv").then(data => {
+      // Filter and convert to coordinates
+      const geoPoints = data
+        .filter(d => d.LATITUDE && d.LONGITUDE)
+        .map(d => [+d.LONGITUDE, +d.LATITUDE])
+        .filter(([lon, lat]) =>
+          isFinite(lon) && isFinite(lat) &&
+          lon > -80 && lon < -70 &&
+          lat > 35 && lat < 45
+        );
 
-        // Axes
-        const xAxis = d3.axisBottom(xScale).ticks(frames.length);
-        const yAxis = d3.axisLeft(yScale);
+      // Fit projection to bounding box
+      const geojson = {
+        type: "FeatureCollection",
+        features: geoPoints.map(([lon, lat]) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [lon, lat] }
+        }))
+      };
 
-        svg.append("g")
-            .attr("transform", `translate(0, ${height - 50})`)
-            .call(xAxis);
+      const projection = d3.geoMercator()
+        .fitExtent([[0, 0], [width, height]], geojson);
 
-        svg.append("g")
-            .attr("transform", `translate(50, 0)`)
-            .call(yAxis);
+      const points = geoPoints.map(d => projection(d));
 
-        // Line generator
-        const line = d3.line()
-            .x(d => xScale(d.time))
-            .y(d => yScale(d.value))
-            .curve(d3.curveMonotoneX);
+      const densityWidth = 600, densityHeight = 400;
+      const density = new Array(densityWidth * densityHeight).fill(0);
 
-        // Draw line
-        svg.append("path")
-            .datum(frames)
-            .attr("fill", "none")
-            .attr("stroke", "steelblue")
-            .attr("stroke-width", 2)
-            .attr("d", line);
+      // Rasterize points into grid
+      points.forEach(([x, y]) => {
+        const xi = Math.floor(x / width * densityWidth);
+        const yi = Math.floor(y / height * densityHeight);
+        if (xi >= 0 && xi < densityWidth && yi >= 0 && yi < densityHeight) {
+          density[yi * densityWidth + xi] += 1;
+        }
+      });
 
-        // Draw points
-        svg.selectAll(".point")
-            .data(frames)
-            .enter()
-            .append("circle")
-            .attr("class", "point")
-            .attr("cx", d => xScale(d.time))
-            .attr("cy", d => yScale(d.value))
-            .attr("r", 5)
-            .attr("fill", "orange");
-    </script>
+      // Apply blur
+      const blurredDensity = blurDensity(density, densityWidth, densityHeight, 3);
+
+      // Calculate maximum for scaling
+      const maxDensity = d3.max(blurredDensity);
+      const color = d3.scaleSequential(d3.interpolateRdBu).domain([maxDensity, 0]);
+      const thresholds = d3.range(1, maxDensity, maxDensity / 25);
+
+      // Generate and draw contours
+      const contours = d3.contours()
+        .size([densityWidth, densityHeight])
+        .smooth(true)
+        .thresholds(thresholds)(blurredDensity);
+
+      const scaleX = width / densityWidth;
+      const scaleY = height / densityHeight;
+
+      context.clearRect(0, 0, width, height);
+      context.save();
+      context.scale(scaleX, scaleY);
+
+      contours.forEach(contour => {
+        context.beginPath();
+        d3.geoPath(null, context)(contour);
+        context.fillStyle = color(contour.value);
+        context.fill();
+      });
+
+      context.restore();
+    });
+  </script>
 </body>
 </html>
