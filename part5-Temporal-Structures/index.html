@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NYC Vehicle Collision Contour</title>
+  <title>NYC Vehicle Collision Contour Map</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://d3js.org/d3-contour.v2.min.js"></script>
   <style>
@@ -23,10 +23,10 @@
 </head>
 <body>
   <div id="description">
-    <h2>Contour Map of NYC Motor Vehicle Collisions</h2>
+    <h2>NYC Motor Vehicle Collision – Smoothed Contour Map</h2>
     <p>
-      This contour visualization shows a smoothed heatmap of vehicle collision density in NYC.
-      It uses a high-resolution grid, blur smoothing, and dynamically computed thresholds and colors to generate a rich and accurate visual map.
+      This visualization represents the spatial density of vehicle collisions in NYC. Color gradients range from blue
+      (low density) to red (high density), with smooth contours and adaptive scale that preserve detail across all regions.
     </p>
   </div>
 
@@ -36,7 +36,6 @@
     const width = 1000, height = 800;
     const context = d3.select("#contourCanvas").node().getContext("2d");
 
-    // Simple blur function (box blur)
     function blurDensity(grid, width, height, radius = 3) {
       const blurred = new Array(width * height).fill(0);
       for (let y = 0; y < height; y++) {
@@ -58,7 +57,6 @@
     }
 
     d3.csv("Motor_Vehicle_Collisions.csv").then(data => {
-      // Filter and convert to coordinates
       const geoPoints = data
         .filter(d => d.LATITUDE && d.LONGITUDE)
         .map(d => [+d.LONGITUDE, +d.LATITUDE])
@@ -68,7 +66,6 @@
           lat > 35 && lat < 45
         );
 
-      // Fit projection to bounding box
       const geojson = {
         type: "FeatureCollection",
         features: geoPoints.map(([lon, lat]) => ({
@@ -82,10 +79,9 @@
 
       const points = geoPoints.map(d => projection(d));
 
-      const densityWidth = 600, densityHeight = 400;
+      const densityWidth = 800, densityHeight = 600;
       const density = new Array(densityWidth * densityHeight).fill(0);
 
-      // Rasterize points into grid
       points.forEach(([x, y]) => {
         const xi = Math.floor(x / width * densityWidth);
         const yi = Math.floor(y / height * densityHeight);
@@ -94,15 +90,13 @@
         }
       });
 
-      // Apply blur
       const blurredDensity = blurDensity(density, densityWidth, densityHeight, 3);
-
-      // Calculate maximum for scaling
       const maxDensity = d3.max(blurredDensity);
-      const color = d3.scaleSequential(d3.interpolateRdBu).domain([maxDensity, 0]);
-      const thresholds = d3.range(1, maxDensity, maxDensity / 25);
+      const minVisible = maxDensity * 0.02;
 
-      // Generate and draw contours
+      const color = d3.scaleSequential(d3.interpolateRdYlBu).domain([maxDensity, minVisible]);
+      const thresholds = d3.range(minVisible, maxDensity, (maxDensity - minVisible) / 50);
+
       const contours = d3.contours()
         .size([densityWidth, densityHeight])
         .smooth(true)
