@@ -119,7 +119,7 @@
       const maxDensity = d3.max(blurredDensity);
       const minVisible = maxDensity * 0.02;
 
-      const color = d3.scaleSequential(d3.interpolateWarm).domain([maxDensity, minVisible]);
+      const color = d3.scaleSequential(d3.interpolateWarm).domain([2, 0]);
       const thresholds = d3.range(minVisible, maxDensity, (maxDensity - minVisible) / 50);
 
       const contours = d3.contours()
@@ -153,69 +153,87 @@
     const years = [2025, 2024, 2023];
     const weekDays = ["M", "T", "W", "T", "F"];
     const margin = { top: 20, left: 40 };
-    const colorScale = d3.scaleSequential(d3.interpolateWarm).domain([0, 20]);
+    const colorScale = d3.scaleSequential(d3.interpolateWarm).domain([50,0]);
 
-    // Fake data generator
-    const allData = [];
-    years.forEach(year => {
-      const start = new Date(year, 0, 1);
-      const end = new Date(year + 1, 0, 1);
-      for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-        allData.push({
-          date: new Date(d),
-          value: Math.floor(Math.random() * 20)  // range: -100 to +100
-        });
-      }
-    });
+    // ========== Real Data from CSV ==========
 
-    // Create calendar grid
-    years.forEach((year, yIndex) => {
-      const yearData = allData.filter(d => d.date.getFullYear() === year);
+d3.csv("Motor_Vehicle_Collisions.csv").then(rawData => {
+  // Step 1: 统计每天的事故数量
+  // Step 1: 统计每天的事故数量（修复格式）
+const dateCounts = d3.rollup(
+  rawData,
+  v => v.length,
+  d => {
+    const raw = d["CRASH DATE"];
+    if (!raw) return null;
+    const parsed = new Date(raw);
+    return isNaN(parsed) ? null : parsed.toISOString().split("T")[0]; // → "YYYY-MM-DD"
+  }
+);
 
-      const g = svg.append("g")
-        .attr("transform", `translate(${margin.left}, ${yIndex * (cellSize * 7 + 30)})`);
 
-      g.append("text")
-        .attr("class", "year-label")
-        .attr("x", -margin.left + 5)
-        .attr("y", cellSize * 4)
-        .text(year);
+  // Step 2: 构建日历数据结构
+  const allData = [];
+  years.forEach(year => {
+    const start = new Date(year, 0, 1);
+    const end = new Date(year + 1, 0, 1);
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split("T")[0]; // format: YYYY-MM-DD
+      const count = dateCounts.get(dateStr) || 0;
+      allData.push({ date: new Date(d), value: count });
+    }
+  });
 
-      const formatMonth = d3.timeFormat("%b");
-      const formatDay = d3.timeFormat("%w");
+  // Step 3: 创建 calendar grid
+  years.forEach((year, yIndex) => {
+    const yearData = allData.filter(d => d.date.getFullYear() === year);
 
-      const cell = g.selectAll("rect")
-        .data(yearData)
-        .join("rect")
-        .attr("class", "cell")
-        .attr("width", cellSize)
-        .attr("height", cellSize)
-        .attr("x", d => d3.timeWeek.count(d3.timeYear(d.date), d.date) * cellSize)
-        .attr("y", d => +formatDay(d.date) * cellSize)
-        .attr("fill", d => colorScale(d.value));
-    });
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left}, ${yIndex * (cellSize * 7 + 30)})`);
 
-    // Legend
-    const legend = svg.append("g")
-      .attr("class", "legend")
-      .attr("transform", `translate(40, ${years.length * (cellSize * 7 + 10)})`);
+    g.append("text")
+      .attr("class", "year-label")
+      .attr("x", -margin.left + 5)
+      .attr("y", cellSize * 4)
+      .text(year);
 
-    const legendData = [0, 5, 10, 15, 20];
-    legend.selectAll("rect")
-      .data(legendData)
+    const formatMonth = d3.timeFormat("%b");
+    const formatDay = d3.timeFormat("%w");
+
+    g.selectAll("rect")
+      .data(yearData)
       .join("rect")
-      .attr("x", (d, i) => i * 40)
-      .attr("width", 40)
-      .attr("height", 12)
-      .attr("fill", d => colorScale(d));
+      .attr("class", "cell")
+      .attr("width", cellSize)
+      .attr("height", cellSize)
+      .attr("x", d => d3.timeWeek.count(d3.timeYear(d.date), d.date) * cellSize)
+      .attr("y", d => +formatDay(d.date) * cellSize)
+      .attr("fill", d => colorScale(d.value));
+  });
 
-    legend.selectAll("text")
-      .data(legendData)
-      .join("text")
-      .attr("x", (d, i) => i * 40 + 20)
-      .attr("y", 26)
-      .attr("text-anchor", "middle")
-      .text(d => d);
+  // Step 4: 图例不变
+  const legendData = [0, 10, 20, 30, 40];
+  const legend = svg.append("g")
+    .attr("class", "legend")
+    .attr("transform", `translate(40, ${years.length * (cellSize * 7 + 10)})`);
+
+  legend.selectAll("rect")
+    .data(legendData)
+    .join("rect")
+    .attr("x", (d, i) => i * 40)
+    .attr("width", 40)
+    .attr("height", 12)
+    .attr("fill", d => colorScale(d));
+
+  legend.selectAll("text")
+    .data(legendData)
+    .join("text")
+    .attr("x", (d, i) => i * 40 + 20)
+    .attr("y", 26)
+    .attr("text-anchor", "middle")
+    .text(d => d);
+});
+
   </script>
 </body>
 </html>
