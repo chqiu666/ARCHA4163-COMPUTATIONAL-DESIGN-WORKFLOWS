@@ -34,7 +34,7 @@
 <body>
 
   <h2>Mapping to space: Contour Map of NYC Motor Vehicle Collisions</h2>
-  <canvas id="contourCanvas" width="1000" height="800"></canvas>
+  <canvas id="contourCanvas" width="835" height="800"></canvas>
 
   <div class="calendar">
     <h2>Mapping to abstract time concept: Calendar Heatmap of Collisions</h2>
@@ -103,7 +103,7 @@
       const maxDensity = d3.max(blurredDensity);
       const minVisible = maxDensity * 0.02;
 
-      const color = d3.scaleSequential(d3.interpolateRdYlBu).domain([maxDensity, minVisible]);
+      const color = d3.scaleSequential(d3.interpolateWarm).domain([maxDensity, minVisible]);
       const thresholds = d3.range(minVisible, maxDensity, (maxDensity - minVisible) / 50);
 
       const contours = d3.contours()
@@ -134,10 +134,10 @@
 
     const svg = d3.select("#calendarHeatmap");
     const cellSize = 15;
-    const years = [2023, 2022, 2021];
+    const years = [2025, 2024, 2023];
     const weekDays = ["M", "T", "W", "T", "F"];
     const margin = { top: 20, left: 40 };
-    const colorScale = d3.scaleSequential(d3.interpolatePiYG).domain([-100, 100]);
+    const colorScale = d3.scaleSequential(d3.interpolateWarm).domain([0, 20]);
 
     // Fake data generator
     const allData = [];
@@ -147,7 +147,7 @@
       for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
         allData.push({
           date: new Date(d),
-          value: Math.floor(Math.random() * 200 - 100)  // range: -100 to +100
+          value: Math.floor(Math.random() * 20)  // range: -100 to +100
         });
       }
     });
@@ -184,7 +184,7 @@
       .attr("class", "legend")
       .attr("transform", `translate(40, ${years.length * (cellSize * 7 + 10)})`);
 
-    const legendData = [-100, -50, 0, 50, 100];
+    const legendData = [0, 5, 10, 15, 20];
     legend.selectAll("rect")
       .data(legendData)
       .join("rect")
