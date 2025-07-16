@@ -16,7 +16,8 @@ let path = []; // 记录被选中分支的索引路径
 
 // 限制候选数
 const MAX_CANDIDATES = 8;
-const TOP_P = 0.98; // 增大阈值，提升多样性
+const TOP_P = 0.99; // 更高阈值，提升多样性
+const TEMPERATURE = 1.2; // 更高温度，提升多样性
 
 // 初始化pipeline
 async function init() {
@@ -59,20 +60,22 @@ async function generateCandidates() {
   generateBtn.textContent = 'Generating...';
   candidateArea.innerHTML = '';
 
+  // 采样参数大幅提升，允许短语作为候选
   let results = await generator(currentPrompt, {
     max_new_tokens: 1,
     do_sample: true,
     top_p: TOP_P,
-    num_return_sequences: MAX_CANDIDATES * 3, // 多取，去重
-    temperature: 1.0
+    num_return_sequences: MAX_CANDIDATES * 8, // 极大提升采样数量
+    temperature: TEMPERATURE
   });
 
-  // 提取新token，去重
+  // 提取新token（允许短语），去重
   let candidates = [];
   let seen = new Set();
   for (let r of results) {
     let text = r.generated_text.trim();
-    let next = text.substring(currentPrompt.length).trim().split(' ')[0];
+    let next = text.substring(currentPrompt.length).replace(/^\s+/, '');
+    // 允许短语（如标点、多个token），但去除空
     if (next && !seen.has(next)) {
       seen.add(next);
       candidates.push(next);
@@ -130,12 +133,12 @@ function selectCandidate(idx) {
   candidateArea.innerHTML = '';
 }
 
-// d3树可视化，所有分支都显示，选中路径高亮
+// d3树可视化，节点为小圆点，文本在右侧水平排列，长文本不截断
 function updateTreeVis() {
   treeContainer.innerHTML = '';
   if (!treeData) return;
   const width = treeContainer.offsetWidth || 700;
-  const dx = 32, dy = 120;
+  const dx = 32, dy = 180; // 横向间距更大
   const treeLayout = d3.tree().nodeSize([dx, dy]);
   const root = d3.hierarchy(treeData, d => d.children);
   treeLayout(root);
@@ -148,7 +151,7 @@ function updateTreeVis() {
     .append('svg')
     .attr('width', width)
     .attr('height', x1 - x0 + dx * 2)
-    .style('font', '14px Roboto');
+    .style('font', '15px Roboto');
   const g = svg.append('g').attr('transform', `translate(${dy/2},${dx-x0})`);
 
   // 计算高亮路径
@@ -181,14 +184,19 @@ function updateTreeVis() {
     .join('g')
     .attr('transform', d => `translate(${d.y},${d.x})`);
   nodeSel.append('circle')
-    .attr('r', 16)
+    .attr('r', 6)
     .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#eee' : '#fff'))
     .attr('stroke', d => highlightNodes.has(d.data) ? '#3264a8' : '#bbb')
     .attr('stroke-width', d => highlightNodes.has(d.data) ? 3 : 1.5);
   nodeSel.append('text')
     .attr('dy', '0.35em')
-    .attr('x', 0)
-    .attr('text-anchor', 'middle')
-    .attr('fill', d => highlightNodes.has(d.data) ? '#fff' : (d.data.isRoot ? '#888' : '#3264a8'))
-    .text(d => d.data.name);
+    .attr('x', 14)
+    .attr('text-anchor', 'start')
+    .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#888' : '#222'))
+    .text(d => d.data.name)
+    .style('font-weight', d => highlightNodes.has(d.data) ? 700 : 400)
+    .style('paint-order', 'stroke')
+    .style('stroke', '#fff')
+    .style('stroke-width', 3)
+    .style('stroke-opacity', 0.7);
 }
