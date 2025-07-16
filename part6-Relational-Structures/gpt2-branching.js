@@ -138,7 +138,7 @@ function updateTreeVis() {
   treeContainer.innerHTML = '';
   if (!treeData) return;
   const width = treeContainer.offsetWidth || 700;
-  const dx = 48, dy = 180; // 节点纵向间距更大
+  const dx = 48, dy = 180;
   const treeLayout = d3.tree().nodeSize([dx, dy]);
   const root = d3.hierarchy(treeData, d => d.children);
   treeLayout(root);
@@ -147,18 +147,24 @@ function updateTreeVis() {
     if (d.x < x0) x0 = d.x;
     if (d.x > x1) x1 = d.x;
   });
+  const height = x1 - x0 + dx * 2;
   const svg = d3.select(treeContainer)
     .append('svg')
     .attr('width', width)
-    .attr('height', x1 - x0 + dx * 2)
-    .style('font', '15px Roboto')
-    .call(d3.zoom()
-      .scaleExtent([0.3, 2])
-      .on('zoom', (event) => {
-        g.attr('transform', event.transform);
-      })
-    );
-  const g = svg.append('g').attr('transform', `translate(${dy/2},${dx-x0})`);
+    .attr('height', height)
+    .style('font', '15px Roboto');
+  const g = svg.append('g');
+
+  // 统一zoom变换
+  function zoomed(event) {
+    g.attr('transform', event.transform);
+  }
+  const initialTransform = d3.zoomIdentity.translate(dy/2, dx-x0);
+  svg.call(d3.zoom()
+    .scaleExtent([0.3, 2])
+    .on('zoom', zoomed)
+  ).call('zoom', initialTransform);
+  g.attr('transform', initialTransform);
 
   // 计算高亮路径
   let highlightNodes = new Set();
@@ -172,26 +178,46 @@ function updateTreeVis() {
     highlightNodes.add(node.data);
   }
 
-  // links
-  g.append('g')
-    .selectAll('path')
-    .data(root.links())
-    .join('path')
-    .transition()
-    .duration(500)
+  // links 动画
+  const linkSel = g.selectAll('path.link')
+    .data(root.links(), d => d.target.data.name + d.source.data.name);
+  linkSel.enter()
+    .append('path')
+    .attr('class', 'link')
     .attr('fill', 'none')
+    .attr('stroke', d => highlightLinks.has(d.target) ? '#3264a8' : '#bbb')
+    .attr('stroke-width', d => highlightLinks.has(d.target) ? 3 : 2)
+    .attr('d', d => {
+      // 初始动画：起点和终点重合
+      const o = {x: d.source.x, y: d.source.y};
+      return d3.linkHorizontal()({source: o, target: o});
+    })
+    .transition().duration(500)
+    .attr('d', d3.linkHorizontal()
+      .x(d => d.y)
+      .y(d => d.x));
+  linkSel.transition().duration(500)
     .attr('stroke', d => highlightLinks.has(d.target) ? '#3264a8' : '#bbb')
     .attr('stroke-width', d => highlightLinks.has(d.target) ? 3 : 2)
     .attr('d', d3.linkHorizontal()
       .x(d => d.y)
       .y(d => d.x));
-  // nodes
-  const nodeSel = g.append('g')
-    .selectAll('g')
-    .data(root.descendants())
-    .join('g')
+  linkSel.exit().transition().duration(300).style('opacity',0).remove();
+
+  // nodes 动画
+  const nodeSel = g.selectAll('g.node')
+    .data(root.descendants(), d => d.data.name + d.depth);
+  const nodeEnter = nodeSel.enter()
+    .append('g')
+    .attr('class', 'node')
+    .attr('transform', d => `translate(${d.y},${d.x})`)
+    .style('opacity',0);
+  nodeEnter.transition().duration(500).style('opacity',1);
+  nodeSel.transition().duration(500)
     .attr('transform', d => `translate(${d.y},${d.x})`);
-  nodeSel.append('text')
+  nodeSel.exit().transition().duration(300).style('opacity',0).remove();
+
+  nodeEnter.append('text')
     .attr('text-anchor', 'middle')
     .attr('x', 0)
     .attr('y', -16)
@@ -203,12 +229,19 @@ function updateTreeVis() {
     .style('stroke-width', 3)
     .style('stroke-opacity', 0.7)
     .style('font-size', '15px');
-  nodeSel.append('circle')
+  nodeEnter.append('circle')
     .attr('r', 0)
     .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#eee' : '#fff'))
     .attr('stroke', d => highlightNodes.has(d.data) ? '#3264a8' : '#bbb')
     .attr('stroke-width', d => highlightNodes.has(d.data) ? 3 : 1.5)
-    .transition()
-    .duration(500)
+    .transition().duration(500)
     .attr('r', 8);
+  nodeSel.select('text')
+    .transition().duration(500)
+    .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#888' : '#222'));
+  nodeSel.select('circle')
+    .transition().duration(500)
+    .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#eee' : '#fff'))
+    .attr('stroke', d => highlightNodes.has(d.data) ? '#3264a8' : '#bbb')
+    .attr('stroke-width', d => highlightNodes.has(d.data) ? 3 : 1.5);
 }
