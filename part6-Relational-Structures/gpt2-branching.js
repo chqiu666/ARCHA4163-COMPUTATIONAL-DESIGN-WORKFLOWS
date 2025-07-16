@@ -63,10 +63,12 @@ async function generateCandidates() {
   generateBtn.disabled = true;
   generateBtn.textContent = 'Generating...';
   candidateArea.innerHTML = '';
+  // 随机2~8个候选
+  const candidateCount = Math.floor(Math.random() * 7) + 2;
   let results = await generator(currentPrompt, {
     max_new_tokens: 1,
-    num_beams: MAX_CANDIDATES,
-    num_return_sequences: MAX_CANDIDATES,
+    num_beams: candidateCount,
+    num_return_sequences: candidateCount,
     do_sample: false // beam search
   });
   let candidates = [];
@@ -78,7 +80,7 @@ async function generateCandidates() {
       seen.add(next);
       candidates.push(next);
     }
-    if (candidates.length >= MAX_CANDIDATES) break;
+    if (candidates.length >= candidateCount) break;
   }
   if (candidates.length === 0) {
     candidateArea.innerHTML = '<span style="color:#888">No candidates found. Try a different prompt or increase num_beams.</span>';
