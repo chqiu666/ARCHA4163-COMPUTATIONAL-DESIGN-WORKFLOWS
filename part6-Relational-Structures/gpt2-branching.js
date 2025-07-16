@@ -20,7 +20,7 @@ let simulation = null;
 
 // 限制候选数
 const MAX_CANDIDATES = 8;
-const TOP_P = 0.99; // 更高阈值，提升多样性
+const TOP_P = 1; // 更高阈值，提升多样性
 const TEMPERATURE = 1.2; // 更高温度，提升多样性
 
 // 初始化pipeline
