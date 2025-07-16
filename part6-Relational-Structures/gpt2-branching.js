@@ -19,9 +19,9 @@ let path = [];
 let simulation = null;
 
 // 限制候选数
-const MAX_CANDIDATES = 8;
-const TOP_P = 1; // 更高阈值，提升多样性
-const TEMPERATURE = 1.2; // 更高温度，提升多样性
+const MAX_CANDIDATES = 5;
+const TOP_K = 20;
+const TEMPERATURE = 1.2;
 
 // 初始化pipeline
 async function init() {
@@ -63,32 +63,25 @@ async function generateCandidates() {
   generateBtn.disabled = true;
   generateBtn.textContent = 'Generating...';
   candidateArea.innerHTML = '';
-
-  // 采样参数大幅提升，允许短语作为候选
   let results = await generator(currentPrompt, {
     max_new_tokens: 1,
-    do_sample: true,
-    top_p: TOP_P,
-    num_return_sequences: MAX_CANDIDATES * 8, // 极大提升采样数量
-    temperature: TEMPERATURE
+    num_beams: MAX_CANDIDATES,
+    num_return_sequences: MAX_CANDIDATES,
+    do_sample: false // beam search
   });
-
-  // 提取新token（允许短语），去重
   let candidates = [];
   let seen = new Set();
   for (let r of results) {
     let text = r.generated_text.trim();
     let next = text.substring(currentPrompt.length).replace(/^\s+/, '');
-    // 允许短语（如标点、多个token），但去除空
     if (next && !seen.has(next)) {
       seen.add(next);
       candidates.push(next);
     }
     if (candidates.length >= MAX_CANDIDATES) break;
   }
-
   if (candidates.length === 0) {
-    candidateArea.innerHTML = '<span style="color:#888">No candidates found. Try a different prompt or increase top-p.</span>';
+    candidateArea.innerHTML = '<span style="color:#888">No candidates found. Try a different prompt or increase num_beams.</span>';
     generateBtn.disabled = false;
     generateBtn.textContent = 'Generate Next';
     return;
