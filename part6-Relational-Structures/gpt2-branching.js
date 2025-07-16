@@ -138,7 +138,7 @@ function updateTreeVis() {
   treeContainer.innerHTML = '';
   if (!treeData) return;
   const width = treeContainer.offsetWidth || 700;
-  const dx = 32, dy = 180; // 横向间距更大
+  const dx = 48, dy = 180; // 节点纵向间距更大
   const treeLayout = d3.tree().nodeSize([dx, dy]);
   const root = d3.hierarchy(treeData, d => d.children);
   treeLayout(root);
@@ -151,7 +151,13 @@ function updateTreeVis() {
     .append('svg')
     .attr('width', width)
     .attr('height', x1 - x0 + dx * 2)
-    .style('font', '15px Roboto');
+    .style('font', '15px Roboto')
+    .call(d3.zoom()
+      .scaleExtent([0.3, 2])
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      })
+    );
   const g = svg.append('g').attr('transform', `translate(${dy/2},${dx-x0})`);
 
   // 计算高亮路径
@@ -171,6 +177,8 @@ function updateTreeVis() {
     .selectAll('path')
     .data(root.links())
     .join('path')
+    .transition()
+    .duration(500)
     .attr('fill', 'none')
     .attr('stroke', d => highlightLinks.has(d.target) ? '#3264a8' : '#bbb')
     .attr('stroke-width', d => highlightLinks.has(d.target) ? 3 : 2)
@@ -183,20 +191,24 @@ function updateTreeVis() {
     .data(root.descendants())
     .join('g')
     .attr('transform', d => `translate(${d.y},${d.x})`);
-  nodeSel.append('circle')
-    .attr('r', 6)
-    .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#eee' : '#fff'))
-    .attr('stroke', d => highlightNodes.has(d.data) ? '#3264a8' : '#bbb')
-    .attr('stroke-width', d => highlightNodes.has(d.data) ? 3 : 1.5);
   nodeSel.append('text')
-    .attr('dy', '0.35em')
-    .attr('x', 14)
-    .attr('text-anchor', 'start')
+    .attr('text-anchor', 'middle')
+    .attr('x', 0)
+    .attr('y', -16)
     .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#888' : '#222'))
     .text(d => d.data.name)
     .style('font-weight', d => highlightNodes.has(d.data) ? 700 : 400)
     .style('paint-order', 'stroke')
     .style('stroke', '#fff')
     .style('stroke-width', 3)
-    .style('stroke-opacity', 0.7);
+    .style('stroke-opacity', 0.7)
+    .style('font-size', '15px');
+  nodeSel.append('circle')
+    .attr('r', 0)
+    .attr('fill', d => highlightNodes.has(d.data) ? '#3264a8' : (d.data.isRoot ? '#eee' : '#fff'))
+    .attr('stroke', d => highlightNodes.has(d.data) ? '#3264a8' : '#bbb')
+    .attr('stroke-width', d => highlightNodes.has(d.data) ? 3 : 1.5)
+    .transition()
+    .duration(500)
+    .attr('r', 8);
 }
