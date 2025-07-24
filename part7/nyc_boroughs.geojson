@@ -1,0 +1,90 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Manhattan",
+        "color": "#22c55e",
+        "population": "1.6M",
+        "area": "22.8 mi²",
+        "tree_density": "High"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-74.0479, 40.6829], [-73.9067, 40.6829], [-73.9067, 40.8820], 
+          [-74.0479, 40.8820], [-74.0479, 40.6829]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Brooklyn",
+        "color": "#84cc16",
+        "population": "2.7M",
+        "area": "69.5 mi²",
+        "tree_density": "Medium"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-74.0421, 40.5707], [-73.8333, 40.5707], [-73.8333, 40.7395], 
+          [-74.0421, 40.7395], [-74.0421, 40.5707]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Queens",
+        "color": "#eab308",
+        "population": "2.4M",
+        "area": "108.1 mi²",
+        "tree_density": "Medium"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-73.9623, 40.5434], [-73.7004, 40.5434], [-73.7004, 40.8007], 
+          [-73.9623, 40.8007], [-73.9623, 40.5434]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bronx",
+        "color": "#f97316",
+        "population": "1.5M",
+        "area": "42.0 mi²",
+        "tree_density": "Low"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-73.9336, 40.7855], [-73.7654, 40.7855], [-73.7654, 40.9176], 
+          [-73.9336, 40.9176], [-73.9336, 40.7855]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Staten Island",
+        "color": "#ef4444",
+        "population": "0.5M",
+        "area": "57.5 mi²",
+        "tree_density": "Very Low"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-74.2558, 40.4774], [-74.0522, 40.4774], [-74.0522, 40.6515], 
+          [-74.2558, 40.6515], [-74.2558, 40.4774]
+        ]]
+      }
+    }
+  ]
+}
