@@ -23,10 +23,10 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #0f1419;
             color: #ffffff;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        .container {
+        .main-container {
             position: relative;
             width: 100vw;
             height: 100vh;
@@ -248,26 +248,196 @@
             font-weight: 400;
         }
 
+        /* Secondary Map Section */
+        .secondary-map-section {
+            width: 100vw;
+            height: 100vh;
+            background: #0f1419;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .secondary-map-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 80vh;
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #secondary-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .secondary-map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .secondary-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(15, 20, 25, 0.95) 0%, rgba(15, 20, 25, 0.7) 70%, transparent 100%);
+            padding: 40px 50px 80px;
+            pointer-events: auto;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .secondary-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #22c55e, #16a34a, #15803d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .secondary-subtitle {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #94a3b8;
+            letter-spacing: 0.01em;
+            max-width: 500px;
+            line-height: 1.5;
+        }
+
+        .secondary-info-panel {
+            position: absolute;
+            bottom: 40px;
+            right: 50px;
+            background: rgba(15, 20, 25, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            min-width: 280px;
+            pointer-events: auto;
+        }
+
+        .secondary-info-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+            letter-spacing: -0.01em;
+        }
+
+        .secondary-info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .secondary-info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .secondary-info-label {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .secondary-info-value {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .borough-legend {
+            position: absolute;
+            top: 50%;
+            left: 50px;
+            transform: translateY(-50%);
+            background: rgba(15, 20, 25, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            min-width: 240px;
+            pointer-events: auto;
+        }
+
+        .borough-legend-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        .borough-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .borough-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .borough-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .borough-manhattan { background: #22c55e; }
+        .borough-brooklyn { background: #84cc16; }
+        .borough-queens { background: #eab308; }
+        .borough-bronx { background: #f97316; }
+        .borough-staten { background: #ef4444; }
+
+        .borough-label {
+            color: #e2e8f0;
+            font-weight: 400;
+        }
+
         @media (max-width: 768px) {
-            .header {
+            .header, .secondary-header {
                 padding: 20px 30px 60px;
             }
             
-            .stats-panel, .legend {
+            .stats-panel, .legend, .secondary-info-panel, .borough-legend {
                 position: static;
                 margin: 20px;
                 transform: none;
             }
             
-            .legend {
-                right: auto;
-                top: auto;
+            .secondary-map-section {
+                padding: 30px 20px;
+            }
+            
+            .secondary-map-container {
+                height: 70vh;
+                border-radius: 16px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Main Tree Visualization -->
+    <div class="main-container">
         <div id="map"></div>
         
         <div class="overlay">
@@ -330,17 +500,88 @@
         </div>
     </div>
 
+    <!-- Secondary Borough Overview Map -->
+    <div class="secondary-map-section">
+        <div class="secondary-map-container">
+            <div id="secondary-map"></div>
+            
+            <div class="secondary-map-overlay">
+                <div class="secondary-header">
+                    <h2 class="secondary-title">NYC Borough Overview</h2>
+                    <p class="secondary-subtitle">
+                        Geographic context showing the five boroughs of New York City with urban forest density patterns and administrative boundaries.
+                    </p>
+                </div>
+
+                <div class="borough-legend">
+                    <h3 class="borough-legend-title">NYC Boroughs</h3>
+                    <div class="borough-item">
+                        <div class="borough-color borough-manhattan"></div>
+                        <span class="borough-label">Manhattan</span>
+                    </div>
+                    <div class="borough-item">
+                        <div class="borough-color borough-brooklyn"></div>
+                        <span class="borough-label">Brooklyn</span>
+                    </div>
+                    <div class="borough-item">
+                        <div class="borough-color borough-queens"></div>
+                        <span class="borough-label">Queens</span>
+                    </div>
+                    <div class="borough-item">
+                        <div class="borough-color borough-bronx"></div>
+                        <span class="borough-label">Bronx</span>
+                    </div>
+                    <div class="borough-item">
+                        <div class="borough-color borough-staten"></div>
+                        <span class="borough-label">Staten Island</span>
+                    </div>
+                </div>
+
+                <div class="secondary-info-panel">
+                    <h3 class="secondary-info-title">Geographic Context</h3>
+                    <div class="secondary-info-item">
+                        <span class="secondary-info-label">Total Area</span>
+                        <span class="secondary-info-value">302.6 mi²</span>
+                    </div>
+                    <div class="secondary-info-item">
+                        <span class="secondary-info-label">Population</span>
+                        <span class="secondary-info-value">8.3M</span>
+                    </div>
+                    <div class="secondary-info-item">
+                        <span class="secondary-info-label">Tree Coverage</span>
+                        <span class="secondary-info-value">24%</span>
+                    </div>
+                    <div class="secondary-info-item">
+                        <span class="secondary-info-label">Street Trees</span>
+                        <span class="secondary-info-value">666K+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Mapbox access token - replace with your own token
         mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 
-        // Initialize map
+        // Initialize main map
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/dark-v11',
             center: [-73.9857, 40.7484], // NYC center
             zoom: 11,
             pitch: 45,
+            bearing: 0,
+            antialias: true
+        });
+
+        // Initialize secondary map
+        const secondaryMap = new mapboxgl.Map({
+            container: 'secondary-map',
+            style: 'mapbox://styles/mapbox/dark-v11',
+            center: [-73.9857, 40.7484], // NYC center
+            zoom: 9,
+            pitch: 0,
             bearing: 0,
             antialias: true
         });
@@ -353,6 +594,15 @@
             'Poor': '#f97316',
             'Dead': '#ef4444',
             'default': '#64748b'
+        };
+
+        // Borough colors
+        const boroughColors = {
+            'Manhattan': '#22c55e',
+            'Brooklyn': '#84cc16',
+            'Queens': '#eab308',
+            'Bronx': '#f97316',
+            'Staten Island': '#ef4444'
         };
 
         map.on('load', async () => {
@@ -474,9 +724,118 @@
             }
         });
 
+        // Secondary map setup
+        secondaryMap.on('load', async () => {
+            try {
+                // Load borough GeoJSON data
+                const boroughResponse = await fetch('nyc_boroughs.geojson');
+                const boroughData = await boroughResponse.json();
+
+                // Add NYC boroughs source
+                secondaryMap.addSource('boroughs', {
+                    type: 'geojson',
+                    data: boroughData
+                });
+
+                // Add borough fill layer
+                secondaryMap.addLayer({
+                    id: 'borough-fill',
+                    type: 'fill',
+                    source: 'boroughs',
+                    paint: {
+                        'fill-color': ['get', 'color'],
+                        'fill-opacity': 0.3
+                    }
+                });
+
+                // Add borough outline
+                secondaryMap.addLayer({
+                    id: 'borough-outline',
+                    type: 'line',
+                    source: 'boroughs',
+                    paint: {
+                        'line-color': ['get', 'color'],
+                        'line-width': 2,
+                        'line-opacity': 0.8
+                    }
+                });
+
+                // Add borough labels
+                secondaryMap.addLayer({
+                    id: 'borough-labels',
+                    type: 'symbol',
+                    source: 'boroughs',
+                    layout: {
+                        'text-field': ['get', 'name'],
+                        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                        'text-size': 14,
+                        'text-transform': 'uppercase',
+                        'text-letter-spacing': 0.1
+                    },
+                    paint: {
+                        'text-color': '#ffffff',
+                        'text-halo-color': '#0f1419',
+                        'text-halo-width': 2
+                    }
+                });
+
+                // Add hover effects for boroughs
+                secondaryMap.on('mouseenter', 'borough-fill', (e) => {
+                    secondaryMap.getCanvas().style.cursor = 'pointer';
+                    
+                    secondaryMap.setPaintProperty('borough-fill', 'fill-opacity', [
+                        'case',
+                        ['==', ['get', 'name'], e.features[0].properties.name],
+                        0.6,
+                        0.3
+                    ]);
+                });
+
+                secondaryMap.on('mouseleave', 'borough-fill', () => {
+                    secondaryMap.getCanvas().style.cursor = '';
+                    secondaryMap.setPaintProperty('borough-fill', 'fill-opacity', 0.3);
+                });
+
+                // Add click popup for boroughs
+                secondaryMap.on('click', 'borough-fill', (e) => {
+                    const props = e.features[0].properties;
+                    
+                    const boroughPopupContent = `
+                        <div class="popup-title">${props.name}</div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Population:</span>
+                            <span class="popup-value">${props.population}</span>
+                        </div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Area:</span>
+                            <span class="popup-value">${props.area}</span>
+                        </div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Tree Density:</span>
+                            <span class="popup-value">${props.tree_density}</span>
+                        </div>
+                    `;
+
+                    new mapboxgl.Popup({
+                        closeButton: true,
+                        closeOnClick: true
+                    })
+                    .setLngLat(e.lngLat)
+                    .setHTML(boroughPopupContent)
+                    .addTo(secondaryMap);
+                });
+
+            } catch (error) {
+                console.error('Error loading borough data:', error);
+            }
+        });
+
         // Add navigation controls
         map.addControl(new mapboxgl.NavigationControl(), 'top-right');
         map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+
+        secondaryMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        secondaryMap.addControl(new mapboxgl.FullscreenControl(), 'top-right');
 
         // Add smooth transitions
         map.on('movestart', () => {
@@ -485,6 +844,16 @@
 
         map.on('moveend', () => {
             map.setPaintProperty('trees-points', 'circle-opacity', 0.8);
+        });
+
+        // Smooth scrolling between sections
+        document.addEventListener('wheel', (e) => {
+            if (e.deltaY > 0) {
+                // Scroll down to secondary map
+                document.querySelector('.secondary-map-section').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
         });
     </script>
 </body>
