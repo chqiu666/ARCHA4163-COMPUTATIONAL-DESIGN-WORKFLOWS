@@ -11,6 +11,12 @@ This project visualizes New York City's urban forest through the 2015 TreesCount
 **Total Trees in Full Dataset**: 666,134 trees  
 **Displayed Sample**: 5,000 trees (for performance optimization)
 
+### Data Download
+The original CSV file (210MB) was too large for GitHub. To get the full dataset:
+```bash
+curl -o nyc_trees_2015.csv "https://data.cityofnewyork.us/api/views/uvpi-gqnh/rows.csv?accessType=DOWNLOAD"
+```
+
 ### Data Attributes
 - **Location**: Latitude and longitude coordinates
 - **Species**: Scientific and common names
@@ -113,15 +119,20 @@ Geospatial structures like this tree census visualization could be invaluable fo
 part7/
 ├── index.html              # Main visualization webpage
 ├── nyc_trees_sample.geojson # GeoJSON data file (5,000 trees)
-├── nyc_trees_2015.csv      # Original CSV dataset (210MB)
 ├── convert_to_geojson.py   # Data processing script
-└── README.md               # This documentation
+├── README.md               # This documentation
+└── project_summary.md      # Project overview
+
+Note: nyc_trees_2015.csv (210MB) not included due to GitHub file size limits
 ```
 
 ## Running the Project
 
-1. Start a local web server in the `part7` directory
-2. Open `index.html` in a modern web browser
+1. Start a local web server in the `part7` directory:
+   ```bash
+   python3 -m http.server 8000
+   ```
+2. Open `http://localhost:8000/` in a modern web browser
 3. Ensure internet connectivity for Mapbox tiles and fonts
 4. Replace the Mapbox access token with your own for production use
 
