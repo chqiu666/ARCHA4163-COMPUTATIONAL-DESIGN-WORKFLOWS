@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Robotic &amp; Algorithmic Art</title>
+    <!--
+      The site explores the historical lineage and contemporary trajectories of
+      robotic and algorithmic art. A minimal Swiss‑style design keeps
+      attention on the content while interactive visualisations built with
+      D3.js allow users to navigate a timeline of seminal works and a network
+      graph of thematic relationships. The page uses local CSS for styling
+      and pulls D3.js from a CDN.
+    -->
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.4/d3.min.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Robotic &amp; Algorithmic Art</h1>
+      <nav>
+        <button id="btnTimeline" class="active">Timeline</button>
+        <button id="btnNetwork">Network</button>
+      </nav>
+    </header>
+    <main>
+      <!-- Timeline view -->
+      <section id="timelineSection" class="view-section">
+        <img
+          src="images/header1.png"
+          alt="Abstract header image for the timeline section"
+          class="header-image"
+        />
+        <div id="timeline"></div>
+      </section>
+      <!-- Network view -->
+      <section id="networkSection" class="view-section hidden">
+        <img
+          src="images/header2.png"
+          alt="Abstract header image for the network section"
+          class="header-image"
+        />
+        <div id="network"></div>
+      </section>
+    </main>
+    <footer>
+      <p>
+        Research foundation &amp; project outline prototype — compiled by Yuhang
+        Qiu (CDP Summer 2025). This site is a prototype for exploring the
+        lineage of robotic art and algorithmic prediction in creative practice.
+      </p>
+    </footer>
+  </body>
+</html>
