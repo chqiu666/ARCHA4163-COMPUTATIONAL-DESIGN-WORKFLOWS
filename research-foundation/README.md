@@ -18,13 +18,13 @@ A modern, slide-style presentation webpage exploring human-machine collaboration
 
 The presentation explores three fundamental concepts in human-machine collaboration:
 
-1. **Agency (代理)** - Distributed control and autonomous action
+1. **Agency** - Distributed control and autonomous action
    - Example: Telephonic Arm Wrestling (1986) by Norman White
    
-2. **Prediction (预测)** - Anticipatory systems and behavioral modeling
+2. **Prediction** - Anticipatory systems and behavioral modeling
    - Example: SEEK (1969-70) by Nicholas Negroponte
    
-3. **Interaction (交互)** - Embodied communication and empathetic interfaces
+3. **Interaction** - Embodied communication and empathetic interfaces
    - Example: Mimus (2017) by Madeline Gannon
 
 ### Slides Overview
