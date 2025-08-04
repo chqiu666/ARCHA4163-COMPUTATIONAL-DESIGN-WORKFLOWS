@@ -142,11 +142,34 @@
             left: 4rem;
             top: 50%;
             transform: translateY(-50%);
-            max-width: 600px;
+            max-width: 500px;
             z-index: 3;
-            background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent);
-            padding: 3rem;
-            border-radius: 20px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.85), rgba(0,0,0,0.5), transparent);
+            padding: 2.5rem;
+            border-radius: 16px;
+        }
+
+        .text-overlay h2 {
+            font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+            font-weight: 500;
+            line-height: 1.1;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.01em;
+        }
+
+        .text-overlay h3 {
+            font-size: clamp(0.9rem, 1.6vw, 1.2rem);
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .text-overlay .project-text {
+            font-size: clamp(0.75rem, 1vw, 0.9rem);
+            line-height: 1.4;
+            opacity: 0.8;
+            font-weight: 300;
         }
 
         .project-info {
@@ -394,11 +417,11 @@
         </section>
 
         <!-- Slide 10: Technical Components - Exploded View -->
-        <section class="slide image-bg" style="background-image: url('../colloquium-1-2025/images/Exploded End Effector.png');">
+        <section class="slide image-bg" style="background-image: url('../colloquium-1-2025/images/Exploded End Effector.png'); background-size: contain; background-position: center; background-repeat: no-repeat;">
             <div class="overlay"></div>
             <div class="text-overlay">
                 <h2>Technical Infrastructure</h2>
-                <h3>End Effector Design</h3>
+                <h3>Mechanical Interface</h3>
                 <p class="project-text">
                     The mechanical and technical components that enable human-machine collaboration require careful consideration of both functional requirements and interaction design. Each element must serve both operational and communicative purposes.
                 </p>
@@ -413,7 +436,7 @@
             <div class="overlay"></div>
             <div class="text-overlay">
                 <h2>Creative Collaboration</h2>
-                <h3>Robotic Drawing Process</h3>
+                <h3>Expressive Automation</h3>
                 <p class="project-text">
                     Exploring the boundaries between human creativity and machine precision through collaborative drawing processes. This investigation reveals how creative intent can be translated, interpreted, and expressed through mechanical systems.
                 </p>
@@ -428,7 +451,7 @@
             <div class="overlay"></div>
             <div class="text-overlay">
                 <h2>Perspectives on Collaboration</h2>
-                <h3>Side View Analysis</h3>
+                <h3>Spatial Relationships</h3>
                 <p class="project-text">
                     This lateral perspective offers insights into the spatial dynamics and ergonomic considerations essential for effective human-machine collaboration. The side view reveals the vertical relationships and accessibility patterns that shape interaction design.
                 </p>
