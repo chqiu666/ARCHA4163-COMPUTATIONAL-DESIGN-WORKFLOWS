@@ -1,15 +1,398 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.js"></script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SketchRNN AI Drawing Studio</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
     <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.sound.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <meta charset="utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  </head>
-  <body>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Main Canvas Container */
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Left Sidebar Controls */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-240px);
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            left: 250px;
+            top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar.collapsed + .sidebar-toggle {
+            left: 20px;
+        }
+
+        .sidebar-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Control Groups */
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 12px;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn.clear {
+            background: #ff6b6b;
+        }
+
+        .btn.clear:hover {
+            background: #ff5252;
+        }
+
+        .btn.random {
+            background: #4ecdc4;
+        }
+
+        .btn.random:hover {
+            background: #45b7b8;
+        }
+
+        .btn.active {
+            background: #2c3e50;
+            color: white;
+        }
+
+        /* Model Selection Grid */
+        .model-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .model-btn {
+            padding: 10px 8px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Sliders */
+        .slider-container {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Status Display */
+        .status-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            z-index: 1000;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .status-bar.loading {
+            background: rgba(255, 193, 7, 0.9);
+            color: #333;
+        }
+
+        .status-bar.ready {
+            background: rgba(40, 167, 69, 0.9);
+        }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+            font-size: 13px;
+            line-height: 1.5;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .instructions h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        /* Drawing Stats */
+        .drawing-stats {
+            background: rgba(240, 240, 240, 0.8);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .sidebar-toggle {
+                left: 220px;
+            }
+            
+            .sidebar.collapsed + .sidebar-toggle {
+                left: 20px;
+            }
+            
+            .instructions {
+                bottom: 10px;
+                right: 10px;
+                max-width: 250px;
+                font-size: 12px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Canvas Styles */
+        canvas {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background: white;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Controls -->
+    <div class="sidebar" id="sidebar">
+        <!-- Clear & Random Controls -->
+        <div class="control-group">
+            <h3><i class="fas fa-palette"></i> Drawing Controls</h3>
+            <button class="btn clear" onclick="clearCanvas()">
+                <i class="fas fa-eraser"></i> Clear Canvas
+            </button>
+            <button class="btn random" onclick="generateRandom()">
+                <i class="fas fa-dice"></i> Random Drawing
+            </button>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="control-group">
+            <h3><i class="fas fa-brain"></i> AI Models</h3>
+            <div class="model-grid">
+                <button class="btn model-btn" data-model="bird" onclick="selectModel('bird')">🐦 Bird</button>
+                <button class="btn model-btn" data-model="cat" onclick="selectModel('cat')">🐱 Cat</button>
+                <button class="btn model-btn" data-model="dog" onclick="selectModel('dog')">🐶 Dog</button>
+                <button class="btn model-btn" data-model="flower" onclick="selectModel('flower')">🌸 Flower</button>
+                <button class="btn model-btn" data-model="face" onclick="selectModel('face')">😊 Face</button>
+                <button class="btn model-btn" data-model="pig" onclick="selectModel('pig')">🐷 Pig</button>
+                <button class="btn model-btn" data-model="ant" onclick="selectModel('ant')">🐜 Ant</button>
+                <button class="btn model-btn" data-model="bus" onclick="selectModel('bus')">🚌 Bus</button>
+                <button class="btn model-btn" data-model="fish" onclick="selectModel('fish')">🐟 Fish</button>
+                <button class="btn model-btn" data-model="house" onclick="selectModel('house')">🏠 House</button>
+                <button class="btn model-btn" data-model="tree" onclick="selectModel('tree')">🌳 Tree</button>
+                <button class="btn model-btn" data-model="butterfly" onclick="selectModel('butterfly')">🦋 Butterfly</button>
+            </div>
+        </div>
+
+        <!-- Temperature Control -->
+        <div class="control-group">
+            <h3><i class="fas fa-thermometer-half"></i> Creativity</h3>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Temperature</span>
+                    <span id="temperatureValue">0.5</span>
+                </div>
+                <input type="range" min="0.1" max="1.0" step="0.1" value="0.5" 
+                       class="slider" id="temperatureSlider" onchange="updateTemperature(this.value)">
+                <small style="color: #666;">Lower = More predictable, Higher = More creative</small>
+            </div>
+        </div>
+
+        <!-- Drawing Stats -->
+        <div class="control-group">
+            <h3><i class="fas fa-chart-line"></i> Stats</h3>
+            <div class="drawing-stats">
+                <div>Strokes: <span id="strokeCount">0</span></div>
+                <div>Current Model: <span id="currentModel">bird</span></div>
+                <div>Status: <span id="drawingStatus">Ready to draw</span></div>
+            </div>
+        </div>
+
+        <!-- Additional Controls -->
+        <div class="control-group">
+            <h3><i class="fas fa-cogs"></i> Options</h3>
+            <button class="btn" onclick="downloadDrawing()">
+                <i class="fas fa-download"></i> Save Drawing
+            </button>
+            <button class="btn" onclick="toggleInstructions()">
+                <i class="fas fa-question-circle"></i> Help
+            </button>
+        </div>
+    </div>
+
+    <!-- Sidebar Toggle -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Main Canvas Area -->
+    <div class="canvas-container" id="canvas-container">
+        <!-- Canvas will be created here by p5.js -->
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar loading" id="statusBar">
+        <span class="loading-spinner"></span> Loading AI models...
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions" id="instructions">
+        <h4>🎨 SketchRNN AI Drawing Studio</h4>
+        <p><strong>How to use:</strong></p>
+        <ul style="margin: 8px 0; padding-left: 20px;">
+            <li>Start drawing on the canvas</li>
+            <li>Stop drawing and the AI completes it</li>
+            <li>Continue drawing to add more</li>
+            <li>Try different models and temperatures</li>
+        </ul>
+        <p><small>Click anywhere to start drawing!</small></p>
+    </div>
+
     <script src="sketch.js"></script>
-  </body>
+</body>
 </html>
