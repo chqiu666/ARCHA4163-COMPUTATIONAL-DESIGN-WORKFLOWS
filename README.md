@@ -112,24 +112,34 @@ While the application works on mobile devices, it's optimized for desktop use wi
 ### Common Issues
 
 1. **Camera not working**
-   - Ensure HTTPS connection
-   - Check browser permissions
-   - Try refreshing the page
+   - Ensure HTTPS connection or use localhost
+   - Check browser permissions for camera access
+   - Try the "Retry Camera Setup" button
+   - Refresh the page
 
 2. **Hand not detected**
    - Improve lighting conditions
    - Move closer to camera
-   - Show full hand in view
+   - Show full hand in camera view
+   - Avoid complex backgrounds
 
 3. **Gestures not working**
    - Make clear, distinct gestures
-   - Wait for gesture delay period
+   - Wait for gesture delay period (1 second)
    - Check hand orientation
+   - Look at the gesture indicator for feedback
 
 4. **AI not completing drawings**
-   - Draw at least 3 strokes
-   - Ensure model is loaded
-   - Check browser console for errors
+   - Draw at least 3 strokes to trigger AI
+   - If SketchRNN fails to load, simple geometric completions will be used instead
+   - Check the debug panel (bottom right) for model status
+   - Internet connection required for AI models
+
+5. **Models not loading**
+   - Check internet connection
+   - Try refreshing the page
+   - If SketchRNN fails, fallback drawings will be provided
+   - Check browser console for detailed error messages
 
 ## 📄 License
 

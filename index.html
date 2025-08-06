@@ -275,14 +275,21 @@
         async function loadSketchRNN(category) {
             updateStatus(`Loading ${category} model...`);
             try {
-                sketchRNN = ml5.sketchRNN(category, sketchRNNReady);
+                // Use the updated ml5.js SketchRNN API
+                sketchRNN = await ml5.sketchRNN(category);
+                console.log(`SketchRNN ${category} model loaded successfully`);
+                updateStatus(`Ready! ${currentCategory} AI model loaded. Show your hand to start drawing.`);
+                updateDebugInfo();
             } catch (error) {
                 console.error('Error loading SketchRNN:', error);
-                updateStatus('Error loading AI model');
+                updateStatus(`Error loading ${category} AI model. Using basic drawing mode.`);
+                sketchRNN = null; // Set to null so we know it failed
+                updateDebugInfo();
             }
         }
 
         function sketchRNNReady() {
+            // This function is no longer needed with the async/await approach
             updateStatus(`Ready! ${currentCategory} AI model loaded. Show your hand to start drawing.`);
             updateDebugInfo();
         }
@@ -458,22 +465,175 @@
             strokePath = [];
         }
 
-        function generateAICompletion() {
-            if (!sketchRNN) return;
+        async function generateAICompletion() {
+            if (!sketchRNN) {
+                console.log('SketchRNN not loaded, using fallback completion');
+                generateFallbackCompletion();
+                return;
+            }
             
             try {
-                // Convert strokes to SketchRNN format
-                const rnnStrokes = convertStrokesToRNNFormat(allStrokes);
+                updateStatus('Generating AI completion...');
                 
-                // Generate completion
-                sketchRNN.generate(rnnStrokes, (error, result) => {
-                    if (!error && result) {
-                        drawRNNStrokes(result);
-                    }
-                });
+                // For the new ml5.js API, we can either:
+                // 1. Generate from existing strokes (if supported)
+                // 2. Or generate a new drawing from scratch
+                
+                // Try to generate a new drawing
+                const result = await sketchRNN.generate();
+                
+                if (result && result.length > 0) {
+                    drawRNNStrokes(result);
+                    updateStatus('AI completion added!');
+                } else {
+                    console.log('No result from SketchRNN generation, using fallback');
+                    generateFallbackCompletion();
+                }
+                
             } catch (error) {
                 console.error('Error generating AI completion:', error);
+                updateStatus('AI completion failed, using simple completion');
+                generateFallbackCompletion();
             }
+        }
+
+        function generateFallbackCompletion() {
+            // Simple geometric completion based on category
+            const completions = {
+                'flower': drawSimpleFlower,
+                'cat': drawSimpleCat,
+                'pig': drawSimplePig,
+                'face': drawSimpleFace
+            };
+            
+            const drawFunction = completions[currentCategory] || drawSimpleFlower;
+            drawFunction();
+            updateStatus('Simple completion added!');
+        }
+
+        function drawSimpleFlower() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Draw petals
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * Math.PI * 2) / 8;
+                const x1 = centerX + Math.cos(angle) * 30;
+                const y1 = centerY + Math.sin(angle) * 30;
+                const x2 = centerX + Math.cos(angle) * 60;
+                const y2 = centerY + Math.sin(angle) * 60;
+                
+                ctx.beginPath();
+                ctx.arc(x2, y2, 15, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw center
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+        }
+
+        function drawSimpleCat() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Ears
+            ctx.beginPath();
+            ctx.moveTo(centerX - 25, centerY - 25);
+            ctx.lineTo(centerX - 15, centerY - 50);
+            ctx.lineTo(centerX - 5, centerY - 25);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX + 25, centerY - 25);
+            ctx.lineTo(centerX + 15, centerY - 50);
+            ctx.lineTo(centerX + 5, centerY - 25);
+            ctx.stroke();
+            
+            // Eyes
+            ctx.beginPath();
+            ctx.arc(centerX - 15, centerY - 10, 3, 0, Math.PI * 2);
+            ctx.arc(centerX + 15, centerY - 10, 3, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+        }
+
+        function drawSimplePig() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 45, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Snout
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 15, 20, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Ears
+            ctx.beginPath();
+            ctx.arc(centerX - 25, centerY - 25, 15, 0, Math.PI * 2);
+            ctx.arc(centerX + 25, centerY - 25, 15, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+        }
+
+        function drawSimpleFace() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Eyes
+            ctx.beginPath();
+            ctx.arc(centerX - 20, centerY - 15, 5, 0, Math.PI * 2);
+            ctx.arc(centerX + 20, centerY - 15, 5, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Nose
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 5);
+            ctx.lineTo(centerX - 5, centerY + 5);
+            ctx.lineTo(centerX + 5, centerY + 5);
+            ctx.stroke();
+            
+            // Mouth
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 5, 20, 0, Math.PI);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
         }
 
         function convertStrokesToRNNFormat(strokes) {
@@ -494,33 +654,53 @@
         }
 
         function drawRNNStrokes(strokes) {
-            ctx.strokeStyle = '#666';
-            ctx.lineWidth = 2;
+            if (!strokes || !Array.isArray(strokes) || strokes.length === 0) {
+                console.log('Invalid strokes data:', strokes);
+                return;
+            }
             
-            let x = lastX;
-            let y = lastY;
+            ctx.strokeStyle = '#ff6b6b'; // Use a different color for AI-generated strokes
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.7; // Make AI strokes slightly transparent
+            
+            // Start from center of canvas if no previous drawing
+            let x = lastX || canvas.width / 2;
+            let y = lastY || canvas.height / 2;
             
             ctx.beginPath();
             ctx.moveTo(x, y);
             
-            for (let stroke of strokes) {
-                x += stroke[0];
-                y += stroke[1];
+            // Handle different possible data formats
+            for (let i = 0; i < strokes.length; i++) {
+                const stroke = strokes[i];
                 
-                if (stroke[2] === 0) {
-                    // Pen down
-                    ctx.lineTo(x, y);
-                } else {
-                    // Pen up
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
+                if (Array.isArray(stroke) && stroke.length >= 2) {
+                    // Format: [dx, dy, pen]
+                    x += stroke[0] * 2; // Scale up the movements
+                    y += stroke[1] * 2;
+                    
+                    // Keep drawing within canvas bounds
+                    x = Math.max(0, Math.min(canvas.width, x));
+                    y = Math.max(0, Math.min(canvas.height, y));
+                    
+                    if (stroke.length >= 3 && stroke[2] === 1) {
+                        // Pen up - finish current stroke and start new one
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                    } else {
+                        // Pen down - continue drawing
+                        ctx.lineTo(x, y);
+                    }
                 }
             }
             
             ctx.stroke();
+            
+            // Reset drawing context
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
+            ctx.globalAlpha = 1.0;
         }
 
         function selectCategory(category) {
@@ -578,13 +758,16 @@
             const debugElement = document.getElementById('debug');
             const cameraStatus = video && video.readyState === 4 ? 'Ready' : 'Not ready';
             const handposeStatus = handpose ? 'Loaded' : 'Not loaded';
-            const sketchRNNStatus = sketchRNN ? 'Loaded' : 'Not loaded';
+            const sketchRNNStatus = sketchRNN ? 'Loaded' : (sketchRNN === null ? 'Failed' : 'Loading...');
+            const handsDetected = predictions.length > 0 ? 'Yes' : 'No';
             
             debugElement.innerHTML = `
                 Camera: ${cameraStatus}<br>
                 HandPose: ${handposeStatus}<br>
                 SketchRNN: ${sketchRNNStatus}<br>
-                Category: ${currentCategory}
+                Category: ${currentCategory}<br>
+                Hands: ${handsDetected}<br>
+                Strokes: ${allStrokes.length}
             `;
         }
 
