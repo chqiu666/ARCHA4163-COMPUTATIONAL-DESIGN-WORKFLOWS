@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybernetic Zoo - Robots in Art Network</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="title">
+                <span class="title-main">Cybernetic Zoo</span>
+                <span class="title-sub">Robots in Art Network</span>
+            </h1>
+            <div class="controls">
+                <button class="btn" id="resetBtn">Reset View</button>
+                <button class="btn" id="layoutBtn">Change Layout</button>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search articles..." class="search-input">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="sidebar">
+            <div class="stats-panel">
+                <h3>Network Statistics</h3>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Articles:</span>
+                        <span class="stat-value" id="totalArticles">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Categories:</span>
+                        <span class="stat-value" id="totalTags">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Connections:</span>
+                        <span class="stat-value" id="avgConnections">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-panel">
+                <h3>Filter by Category</h3>
+                <div class="filter-tags" id="filterTags">
+                    <!-- Tags will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="legend-panel">
+                <h3>Legend</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #64ffda;"></div>
+                        <span>Art & Sculpture</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6b6b;"></div>
+                        <span>Performance</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4ecdc4;"></div>
+                        <span>Interactive</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #45b7d1;"></div>
+                        <span>Electronic</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f9ca24;"></div>
+                        <span>Kinetic</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <div class="loading" id="loading">
+                <div class="loader"></div>
+                <p>Loading cybernetic artworks...</p>
+            </div>
+            <svg id="networkSvg" class="network-svg"></svg>
+            <div class="tooltip" id="tooltip"></div>
+        </div>
+    </main>
+
+    <div class="info-panel" id="infoPanel">
+        <div class="info-content">
+            <button class="close-btn" id="closeInfoBtn">&times;</button>
+            <div class="info-header">
+                <img class="info-image" id="infoImage" src="" alt="">
+                <div class="info-text">
+                    <h2 class="info-title" id="infoTitle"></h2>
+                    <div class="info-tags" id="infoTags"></div>
+                </div>
+            </div>
+            <div class="info-body">
+                <p class="info-excerpt" id="infoExcerpt"></p>
+                <div class="info-actions">
+                    <a href="#" target="_blank" rel="noopener" class="btn btn-primary" id="visitBtn">
+                        Visit Original Article
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="network-visualization.js"></script>
+</body>
+</html>

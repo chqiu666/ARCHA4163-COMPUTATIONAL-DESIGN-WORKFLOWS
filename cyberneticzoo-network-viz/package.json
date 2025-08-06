@@ -1,0 +1,24 @@
+{
+  "name": "cyberneticzoo-network-viz",
+  "version": "1.0.0",
+  "description": "Interactive network visualization of robots-in-art from cyberneticzoo.com",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "scrape": "node src/scraper.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^21.5.2",
+    "cheerio": "^1.0.0-rc.12",
+    "axios": "^1.6.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["visualization", "network", "d3", "robots", "art"],
+  "author": "",
+  "license": "MIT"
+}
