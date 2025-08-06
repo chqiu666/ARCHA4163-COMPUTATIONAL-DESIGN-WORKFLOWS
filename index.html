@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Drawing with SketchRNN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: white;
+            cursor: crosshair;
+        }
+
+        #video {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 160px;
+            height: 120px;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            z-index: 100;
+        }
+
+        .controls {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-width: 120px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .clear-btn {
+            background: #ff6b6b !important;
+            color: white !important;
+            margin-bottom: 20px;
+        }
+
+        .clear-btn:hover {
+            background: #ff5252 !important;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+        }
+
+        .gesture-indicator {
+            position: absolute;
+            top: 160px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 100;
+            min-width: 100px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <video id="video" autoplay muted></video>
+    
+    <div class="controls">
+        <button class="button clear-btn" onclick="clearCanvas()">Clear Canvas</button>
+        <button class="button category-btn" data-category="random" onclick="selectCategory('random')">Random</button>
+        <button class="button category-btn" data-category="flower" onclick="selectCategory('flower')">Flower</button>
+        <button class="button category-btn" data-category="cat" onclick="selectCategory('cat')">Cat</button>
+        <button class="button category-btn" data-category="pig" onclick="selectCategory('pig')">Pig</button>
+        <button class="button category-btn" data-category="face" onclick="selectCategory('face')">Face</button>
+    </div>
+
+    <div class="status" id="status">Loading models...</div>
+    <div class="gesture-indicator" id="gesture">No hand detected</div>
+
+    <div class="instructions">
+        <strong>Hand Gesture Controls:</strong><br>
+        👉 <strong>Point with index finger</strong> - Draw on canvas<br>
+        🤏 <strong>Pinch (thumb + index finger)</strong> - Click buttons<br>
+        ✋ <strong>Open palm</strong> - Clear canvas<br>
+        🎨 <strong>AI Drawing:</strong> After drawing a few strokes, the AI will complete your drawing based on the selected category.
+    </div>
+
+    <!-- TensorFlow.js -->
+    <script src="https://unpkg.com/@tensorflow/tfjs-core@3.7.0/dist/tf-core.js"></script>
+    <script src="https://unpkg.com/@tensorflow/tfjs-backend-webgl@3.7.0/dist/tf-backend-webgl.js"></script>
+    
+    <!-- MediaPipe Handpose -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.0/dist/hand-pose-detection.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.min.js"></script>
+    
+    <!-- ml5.js -->
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+
+    <script>
+        // Global variables
+        let handpose;
+        let video;
+        let predictions = [];
+        let canvas, ctx;
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+        let sketchRNN;
+        let currentCategory = 'flower';
+        let strokePath = [];
+        let allStrokes = [];
+        let lastGesture = '';
+        let gestureStartTime = 0;
+        const GESTURE_DELAY = 1000; // 1 second delay to prevent accidental triggers
+
+        // Available SketchRNN categories
+        const categories = ['flower', 'cat', 'pig', 'face'];
+        
+        // Initialize the application
+        async function setup() {
+            // Setup canvas
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            
+            // Setup video
+            video = document.getElementById('video');
+            
+            // Setup drawing context
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            try {
+                // Initialize webcam
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 }
+                });
+                video.srcObject = stream;
+                
+                // Initialize handpose
+                handpose = ml5.handpose(video, modelReady);
+                handpose.on('predict', gotHands);
+                
+                // Initialize SketchRNN with flower model
+                await loadSketchRNN(currentCategory);
+                
+                updateStatus('Ready! Show your hand to start drawing.');
+                
+            } catch (error) {
+                console.error('Error initializing:', error);
+                updateStatus('Error: Please allow camera access and refresh the page.');
+            }
+        }
+
+        function modelReady() {
+            console.log('Handpose model ready!');
+        }
+
+        async function loadSketchRNN(category) {
+            updateStatus(`Loading ${category} model...`);
+            try {
+                sketchRNN = ml5.sketchRNN(category, sketchRNNReady);
+            } catch (error) {
+                console.error('Error loading SketchRNN:', error);
+                updateStatus('Error loading AI model');
+            }
+        }
+
+        function sketchRNNReady() {
+            updateStatus(`${currentCategory} model ready!`);
+        }
+
+        function gotHands(results) {
+            predictions = results;
+            
+            if (predictions.length > 0) {
+                const hand = predictions[0];
+                analyzeGesture(hand);
+                drawHandPoints(hand);
+            } else {
+                document.getElementById('gesture').textContent = 'No hand detected';
+            }
+        }
+
+        function analyzeGesture(hand) {
+            const landmarks = hand.landmarks;
+            
+            // Get key points
+            const indexTip = landmarks[8];
+            const indexPip = landmarks[6];
+            const thumbTip = landmarks[4];
+            const middleTip = landmarks[12];
+            const ringTip = landmarks[16];
+            const pinkyTip = landmarks[20];
+            const wrist = landmarks[0];
+            
+            // Convert to canvas coordinates
+            const indexX = indexTip[0];
+            const indexY = indexTip[1];
+            
+            // Calculate distances for gesture recognition
+            const thumbIndexDist = distance(thumbTip, indexTip);
+            const indexMiddleDist = distance(indexTip, middleTip);
+            const fingersUp = countFingersUp(landmarks);
+            
+            let currentGesture = '';
+            
+            // Gesture detection logic
+            if (thumbIndexDist < 40) {
+                // Pinch gesture (thumb and index close)
+                currentGesture = 'pinch';
+                handlePinchGesture(indexX, indexY);
+            } else if (fingersUp >= 4) {
+                // Open palm (4 or more fingers up)
+                currentGesture = 'palm';
+                handlePalmGesture();
+            } else if (fingersUp === 1 && isFingerUp(landmarks, 1)) {
+                // Index finger pointing
+                currentGesture = 'point';
+                handlePointingGesture(indexX, indexY);
+            } else {
+                currentGesture = 'none';
+                if (isDrawing) {
+                    finishStroke();
+                }
+            }
+            
+            // Update gesture indicator with delay for stability
+            if (currentGesture !== lastGesture) {
+                lastGesture = currentGesture;
+                gestureStartTime = Date.now();
+            }
+            
+            // Update display
+            const gestureNames = {
+                'pinch': '🤏 Pinch (Click)',
+                'palm': '✋ Open Palm (Clear)',
+                'point': '👉 Pointing (Draw)',
+                'none': '✊ No gesture'
+            };
+            
+            document.getElementById('gesture').textContent = gestureNames[currentGesture] || 'Detecting...';
+        }
+
+        function countFingersUp(landmarks) {
+            let count = 0;
+            
+            // Thumb
+            if (landmarks[4][0] > landmarks[3][0]) count++;
+            
+            // Other fingers
+            const fingerTips = [8, 12, 16, 20];
+            const fingerPips = [6, 10, 14, 18];
+            
+            for (let i = 0; i < fingerTips.length; i++) {
+                if (landmarks[fingerTips[i]][1] < landmarks[fingerPips[i]][1]) {
+                    count++;
+                }
+            }
+            
+            return count;
+        }
+
+        function isFingerUp(landmarks, fingerIndex) {
+            const tips = [4, 8, 12, 16, 20];
+            const pips = [3, 6, 10, 14, 18];
+            
+            if (fingerIndex === 0) {
+                // Thumb
+                return landmarks[tips[0]][0] > landmarks[pips[0]][0];
+            } else {
+                // Other fingers
+                return landmarks[tips[fingerIndex]][1] < landmarks[pips[fingerIndex]][1];
+            }
+        }
+
+        function handlePointingGesture(x, y) {
+            if (!isDrawing) {
+                startDrawing(x, y);
+            } else {
+                continueDrawing(x, y);
+            }
+        }
+
+        function handlePinchGesture(x, y) {
+            if (Date.now() - gestureStartTime > GESTURE_DELAY) {
+                handleButtonClick(x, y);
+            }
+        }
+
+        function handlePalmGesture() {
+            if (Date.now() - gestureStartTime > GESTURE_DELAY) {
+                clearCanvas();
+            }
+        }
+
+        function handleButtonClick(x, y) {
+            // Check if cursor is over any button
+            const buttons = document.querySelectorAll('.button');
+            buttons.forEach(button => {
+                const rect = button.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                    button.click();
+                }
+            });
+        }
+
+        function startDrawing(x, y) {
+            isDrawing = true;
+            lastX = x;
+            lastY = y;
+            strokePath = [[x, y]];
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function continueDrawing(x, y) {
+            if (!isDrawing) return;
+            
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            
+            strokePath.push([x, y]);
+            lastX = x;
+            lastY = y;
+        }
+
+        function finishStroke() {
+            if (!isDrawing) return;
+            
+            isDrawing = false;
+            if (strokePath.length > 5) {
+                allStrokes.push(strokePath);
+                
+                // Trigger AI completion after a few strokes
+                if (allStrokes.length >= 3) {
+                    generateAICompletion();
+                }
+            }
+            strokePath = [];
+        }
+
+        function generateAICompletion() {
+            if (!sketchRNN) return;
+            
+            try {
+                // Convert strokes to SketchRNN format
+                const rnnStrokes = convertStrokesToRNNFormat(allStrokes);
+                
+                // Generate completion
+                sketchRNN.generate(rnnStrokes, (error, result) => {
+                    if (!error && result) {
+                        drawRNNStrokes(result);
+                    }
+                });
+            } catch (error) {
+                console.error('Error generating AI completion:', error);
+            }
+        }
+
+        function convertStrokesToRNNFormat(strokes) {
+            const rnnStrokes = [];
+            
+            for (let stroke of strokes) {
+                if (stroke.length > 1) {
+                    for (let i = 1; i < stroke.length; i++) {
+                        const dx = stroke[i][0] - stroke[i-1][0];
+                        const dy = stroke[i][1] - stroke[i-1][1];
+                        const pen = (i === stroke.length - 1) ? 1 : 0; // Pen up at end of stroke
+                        rnnStrokes.push([dx, dy, pen]);
+                    }
+                }
+            }
+            
+            return rnnStrokes;
+        }
+
+        function drawRNNStrokes(strokes) {
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            
+            let x = lastX;
+            let y = lastY;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            
+            for (let stroke of strokes) {
+                x += stroke[0];
+                y += stroke[1];
+                
+                if (stroke[2] === 0) {
+                    // Pen down
+                    ctx.lineTo(x, y);
+                } else {
+                    // Pen up
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+        }
+
+        function selectCategory(category) {
+            if (category === 'random') {
+                currentCategory = categories[Math.floor(Math.random() * categories.length)];
+                updateStatus(`Random selection: ${currentCategory}`);
+            } else {
+                currentCategory = category;
+            }
+            
+            // Update active button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (category === 'random') {
+                document.querySelector('[data-category="random"]').classList.add('active');
+            } else {
+                document.querySelector(`[data-category="${category}"]`).classList.add('active');
+            }
+            
+            loadSketchRNN(currentCategory);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            allStrokes = [];
+            strokePath = [];
+            isDrawing = false;
+            updateStatus('Canvas cleared!');
+        }
+
+        function drawHandPoints(hand) {
+            // Draw hand landmarks for debugging (optional)
+            const landmarks = hand.landmarks;
+            
+            // Draw index fingertip
+            const indexTip = landmarks[8];
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(indexTip[0], indexTip[1], 8, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function distance(point1, point2) {
+            return Math.sqrt(Math.pow(point1[0] - point2[0], 2) + Math.pow(point1[1] - point2[1], 2));
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
+
+        // Initialize when page loads
+        window.addEventListener('load', setup);
+
+        // Set initial category
+        selectCategory('flower');
+    </script>
+</body>
+</html>
