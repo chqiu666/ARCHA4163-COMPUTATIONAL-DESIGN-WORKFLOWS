@@ -1,150 +1,107 @@
-# Hand Drawing with SketchRNN
+# Hand Drawing with SketchRNN - 修复版本
 
-A web application that combines hand tracking with AI-powered drawing completion using SketchRNN. Draw with your hand gestures and let AI complete your artwork!
+这是一个使用p5.js和ml5.js构建的手势控制绘画应用，结合了手部追踪和AI绘画完成功能。
 
-## 🎨 Features
+## 修复内容
 
-- **Hand Gesture Drawing**: Use your index finger as a drawing tool
-- **AI Drawing Completion**: SketchRNN AI completes your drawings based on selected categories
-- **Multiple Categories**: Choose from Flower, Cat, Pig, Face, or Random selection
-- **Gesture Controls**: 
-  - 👉 **Point with index finger** - Draw on canvas
-  - 🤏 **Pinch (thumb + index finger)** - Click buttons
-  - ✋ **Open palm** - Clear canvas
-- **Real-time Hand Tracking**: Live webcam feed with hand landmark detection
-- **Fullscreen Canvas**: Immersive drawing experience
+### 主要问题修复：
+1. **库版本兼容性问题** - 统一使用与工作示例相同的稳定版本：
+   - p5.js 0.9.0
+   - ml5.js 0.12.2
 
-## 🚀 Getting Started
+2. **API调用方式错误** - 修复了ml5.js HandPose和SketchRNN的正确使用方法
 
-### Prerequisites
+3. **代码架构重构** - 从原生Canvas API转换为完整的p5.js框架
 
-- Modern web browser with webcam access
-- HTTPS connection (required for webcam access)
+4. **手势识别优化** - 改进了手势检测的准确性和稳定性
 
-### Installation
+### 功能特性：
+- 👉 **指向手势** - 使用食指绘画
+- 🤏 **捏合手势** - 点击按钮
+- ✋ **张开手掌** - 清除画布
+- 🎨 **AI绘画完成** - SketchRNN自动完成绘画
 
-1. Clone or download this repository
-2. Start a local web server:
-   ```bash
-   python3 -m http.server 8000
-   # or
-   python -m SimpleHTTPServer 8000
-   ```
-3. Open your browser and navigate to `http://localhost:8000`
-4. Allow webcam access when prompted
+## 测试方法
 
-## 🎮 How to Use
+### 本地测试：
+```bash
+cd drawing-prediction
+python3 -m http.server 8000
+```
+然后访问：http://localhost:8000
 
-1. **Allow Camera Access**: Grant permission for webcam access
-2. **Position Your Hand**: Show your hand to the camera (top-right corner)
-3. **Select a Category**: Use pinch gesture to click on category buttons (left side)
-4. **Start Drawing**: Point with your index finger and move to draw
-5. **AI Completion**: After drawing a few strokes, the AI will complete your drawing
-6. **Clear Canvas**: Show an open palm to clear the canvas
+### 比较测试：
+1. **主应用** - http://localhost:8000
+2. **手指追踪示例** - http://localhost:8001 (需要在forefingertrackexample目录启动)
+3. **SketchRNN示例** - http://localhost:8002 (需要在sketchrnnexample目录启动)
 
-## 🤖 AI Models
+### 浏览器要求：
+- 需要HTTPS或localhost环境（摄像头权限）
+- 推荐使用Chrome、Firefox或Safari
+- 确保允许摄像头访问权限
 
-The application uses:
-- **ml5.js HandPose**: For real-time hand tracking and gesture recognition
-- **SketchRNN**: For AI-powered drawing completion in categories:
-  - Flower 🌸
-  - Cat 🐱
-  - Pig 🐷
-  - Face 😊
-  - Random (randomly selects one of the above)
+## 故障排除
 
-## 🎯 Gesture Recognition
+### 摄像头问题：
+1. 检查浏览器权限设置
+2. 确保使用HTTPS或localhost
+3. 尝试刷新页面
+4. 点击"Retry Camera Setup"按钮
 
-The application recognizes three main gestures:
+### AI模型问题：
+- SketchRNN模型需要时间加载（约5-15秒）
+- 如果加载失败，会显示相应错误信息
+- 可以切换不同的绘画类别重试
 
-### Drawing Gesture
-- **Trigger**: Index finger extended, other fingers down
-- **Action**: Draws on the canvas following finger movement
-- **Visual**: Red dot appears on index fingertip
+### 手势识别问题：
+- 确保手部完整在摄像头画面中
+- 手势需要保持稳定1秒以上
+- 检查页面右侧的调试信息
 
-### Click Gesture  
-- **Trigger**: Thumb and index finger pinched together (< 40px apart)
-- **Action**: Clicks buttons when cursor is over them
-- **Delay**: 1-second delay to prevent accidental clicks
-
-### Clear Gesture
-- **Trigger**: Open palm with 4+ fingers extended
-- **Action**: Clears the entire canvas
-- **Delay**: 1-second delay to prevent accidental clearing
-
-## 🛠 Technical Details
-
-### Technologies Used
-- **TensorFlow.js**: Core machine learning framework
-- **MediaPipe Handpose**: Hand landmark detection
-- **ml5.js**: Simplified ML library for SketchRNN and HandPose
-- **HTML5 Canvas**: Drawing surface
-- **Vanilla JavaScript**: Application logic
-
-### Browser Compatibility
-- Chrome 80+ (recommended)
-- Firefox 75+
-- Safari 13+
-- Edge 80+
-
-### Performance Tips
-- Use good lighting for better hand detection
-- Keep hand clearly visible in camera view
-- Avoid complex backgrounds
-- Use HTTPS for production deployment
-
-## 🔧 Configuration
-
-Key parameters that can be adjusted in the code:
-
-```javascript
-const GESTURE_DELAY = 1000; // Delay for gesture stability (ms)
-const PINCH_THRESHOLD = 40; // Distance threshold for pinch detection (px)
-const MIN_STROKES_FOR_AI = 3; // Minimum strokes before AI completion
+## 文件结构
+```
+drawing-prediction/
+├── index.html          # 主页面（已修复）
+├── sketch.js           # p5.js主逻辑（重新编写）
+├── README.md           # 说明文档
+├── forefingertrackexample/  # 手指追踪工作示例
+│   ├── index.html
+│   └── sketch.js
+└── sketchrnnexample/   # SketchRNN工作示例
+    ├── index.html
+    ├── sketch.js
+    └── style.css
 ```
 
-## 📱 Mobile Support
+## 技术实现
 
-While the application works on mobile devices, it's optimized for desktop use with webcams. Mobile performance may vary depending on device capabilities.
+### 使用的库：
+- p5.js 0.9.0 - 图形绘制框架
+- p5.dom.js - DOM操作扩展  
+- ml5.js 0.12.2 - 机器学习库
 
-## 🐛 Troubleshooting
+### 手势识别逻辑：
+- 使用21个手部关键点进行手势分析
+- 基于手指位置和距离计算手势类型
+- 添加时间延迟避免误触发
 
-### Common Issues
+### SketchRNN集成：
+- 支持flower、cat、pig、face四种绘画类别
+- 使用种子路径进行AI绘画完成
+- 实时显示AI生成的笔画
 
-1. **Camera not working**
-   - Ensure HTTPS connection
-   - Check browser permissions
-   - Try refreshing the page
+## 性能优化
 
-2. **Hand not detected**
-   - Improve lighting conditions
-   - Move closer to camera
-   - Show full hand in view
+- 减少手势检测延迟（500ms）
+- 优化绘画触发条件（1笔画即可触发AI）
+- 改进笔画数据格式匹配SketchRNN要求
+- 添加视觉反馈显示手部关键点
 
-3. **Gestures not working**
-   - Make clear, distinct gestures
-   - Wait for gesture delay period
-   - Check hand orientation
+---
 
-4. **AI not completing drawings**
-   - Draw at least 3 strokes
-   - Ensure model is loaded
-   - Check browser console for errors
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
-## 🙏 Acknowledgments
-
-- **ml5.js** community for the amazing machine learning library
-- **Google MediaPipe** for hand tracking technology
-- **Google Magenta** for the SketchRNN model
-- **p5.js** tutorials for hand tracking inspiration
-
-## 🔗 References
-
-- [ml5.js HandPose Documentation](https://learn.ml5js.org/#/reference/handpose)
-- [SketchRNN Paper](https://arxiv.org/abs/1704.03477)
-- [MediaPipe Hands](https://mediapipe.dev/solutions/hands)
-- [p5.js Hand Tracking Tutorial](https://p5js.org/tutorials/speak-with-your-hands/)
+## 原始功能保留：
+- 美观的渐变背景UI
+- 实时状态显示
+- 调试信息面板
+- 多类别AI绘画模型
+- 响应式设计
