@@ -18,10 +18,20 @@ let nextPen = 'down';
 let seedPath = [];
 let isAIDrawing = false;
 
-// Gesture recognition variables
+// Gesture recognition variables - simplified
 let lastGesture = '';
 let gestureStartTime = 0;
-const GESTURE_DELAY = 500; // Reduced delay for better responsiveness
+const GESTURE_DELAY = 300; // Reduced for better responsiveness
+
+// Coordinate smoothing variables
+let smoothedX = 0, smoothedY = 0;
+let coordHistory = [];
+const SMOOTH_FACTOR = 0.3; // Higher = more smoothing
+const HISTORY_LENGTH = 5;
+
+// Video to canvas mapping variables
+let videoScaleX = 1, videoScaleY = 1;
+let videoOffsetX = 0, videoOffsetY = 0;
 
 // Available SketchRNN categories
 const categories = ['flower', 'cat', 'pig', 'face'];
@@ -35,10 +45,13 @@ function setup() {
     stroke(51);
     noFill();
     
-    // Initialize video capture
+    // Initialize video capture with proper settings
     video = createCapture(VIDEO);
     video.size(160, 120);
     video.hide(); // Hide the video element since we'll display it manually
+    
+    // Calculate video to canvas mapping - fix coordinate system
+    calculateVideoMapping();
     
     // Place video in the container
     video.parent('video-container');
@@ -46,8 +59,14 @@ function setup() {
     // Update status
     updateStatus('Loading hand tracking model...');
     
-    // Initialize handpose model - use the same approach as working examples
-    handpose = ml5.handpose(video, modelReady);
+    // Initialize handpose model with optimized settings
+    handpose = ml5.handpose(video, {
+        flipHorizontal: true, // Mirror the video to match natural gestures
+        maxContinuousChecks: Infinity,
+        detectionConfidence: 0.8,
+        scoreThreshold: 0.75,
+        iouThreshold: 0.3
+    }, modelReady);
     
     // Set up handpose event listener
     handpose.on("predict", gotHands);
@@ -61,6 +80,12 @@ function setup() {
     
     // Set initial category as active
     selectCategory('flower');
+}
+
+function calculateVideoMapping() {
+    // Calculate scale factors to map video coordinates to canvas coordinates
+    videoScaleX = width / 160; // video width is 160
+    videoScaleY = height / 120; // video height is 120
 }
 
 function modelReady() {
@@ -98,38 +123,42 @@ function analyzeGesture(hand) {
     const pinkyTip = landmarks[20];
     const wrist = landmarks[0];
     
-    // Calculate distances for gesture recognition
-    const thumbIndexDist = dist(thumbTip[0], thumbTip[1], indexTip[0], indexTip[1]);
+    // Map video coordinates to canvas coordinates and apply mirroring
+    const mappedIndexX = (160 - indexTip[0]) * videoScaleX; // Flip horizontally
+    const mappedIndexY = indexTip[1] * videoScaleY;
+    
+    // Apply coordinate smoothing to reduce jitter
+    const smoothedCoords = smoothCoordinates(mappedIndexX, mappedIndexY);
+    
+    // Count fingers up for gesture detection
     const fingersUp = countFingersUp(landmarks);
     
-    // Improved gesture detection with more stable thresholds
+    // Simplified gesture detection - only two states
     let currentGesture = '';
     
-    if (thumbIndexDist < 50) { // Slightly increased threshold for stability
-        // Pinch gesture (thumb and index close)
-        currentGesture = 'pinch';
-        handlePinchGesture(indexTip[0], indexTip[1]);
-    } else if (fingersUp >= 4) {
-        // Open palm (4 or more fingers up)
-        currentGesture = 'palm';
-        handlePalmGesture();
-    } else if (fingersUp === 1 && isIndexFingerUp(landmarks)) {
-        // Index finger pointing - improved detection
+    if (fingersUp === 1 && isIndexFingerUp(landmarks)) {
+        // Index finger pointing - drawing mode
         currentGesture = 'point';
-        handlePointingGesture(indexTip[0], indexTip[1]);
+        handlePointingGesture(smoothedCoords.x, smoothedCoords.y);
+    } else if (fingersUp >= 4) {
+        // Open palm - clear mode (but only through button)
+        currentGesture = 'palm';
+        if (isDrawing) {
+            finishStroke();
+        }
     } else {
+        // Any other gesture - stop drawing
         currentGesture = 'none';
         if (isDrawing) {
             finishStroke();
         }
     }
     
-    // Update gesture display
+    // Update gesture display - simplified
     const gestureNames = {
-        'pinch': '🤏 Pinch (Click)',
-        'palm': '✋ Open Palm (Clear)',
-        'point': '👉 Pointing (Draw)',
-        'none': '✊ No gesture'
+        'point': '👉 Drawing Mode',
+        'palm': '✋ Open Palm',
+        'none': '✊ Not Drawing'
     };
     
     updateGestureDisplay(gestureNames[currentGesture] || 'Detecting...');
@@ -141,11 +170,32 @@ function analyzeGesture(hand) {
     }
 }
 
+function smoothCoordinates(x, y) {
+    // Add current coordinates to history
+    coordHistory.push({x: x, y: y});
+    
+    // Keep only recent history
+    if (coordHistory.length > HISTORY_LENGTH) {
+        coordHistory.shift();
+    }
+    
+    // Calculate smoothed coordinates using exponential moving average
+    if (coordHistory.length > 0) {
+        smoothedX = smoothedX * (1 - SMOOTH_FACTOR) + x * SMOOTH_FACTOR;
+        smoothedY = smoothedY * (1 - SMOOTH_FACTOR) + y * SMOOTH_FACTOR;
+    } else {
+        smoothedX = x;
+        smoothedY = y;
+    }
+    
+    return {x: smoothedX, y: smoothedY};
+}
+
 function countFingersUp(landmarks) {
     let count = 0;
     
-    // Thumb - check if tip is to the right of the middle joint (for right hand)
-    if (landmarks[4][0] > landmarks[3][0]) count++;
+    // Thumb - check if tip is to the left of the middle joint (for mirrored view)
+    if (landmarks[4][0] < landmarks[3][0]) count++;
     
     // Other fingers - check if tip is above the pip joint
     const fingerTips = [8, 12, 16, 20];
@@ -162,7 +212,7 @@ function countFingersUp(landmarks) {
 
 function isIndexFingerUp(landmarks) {
     // More accurate detection - index finger should be significantly higher than pip
-    return landmarks[8][1] < landmarks[6][1] - 10;
+    return landmarks[8][1] < landmarks[6][1] - 15; // Increased threshold for stability
 }
 
 function handlePointingGesture(fingerX, fingerY) {
@@ -175,28 +225,7 @@ function handlePointingGesture(fingerX, fingerY) {
     }
 }
 
-function handlePinchGesture(fingerX, fingerY) {
-    if (millis() - gestureStartTime > GESTURE_DELAY) {
-        handleButtonClick(fingerX, fingerY);
-    }
-}
-
-function handlePalmGesture() {
-    if (millis() - gestureStartTime > GESTURE_DELAY) {
-        clearCanvas();
-    }
-}
-
-function handleButtonClick(x, y) {
-    // Convert coordinates and check if over any button
-    const buttons = document.querySelectorAll('.button');
-    buttons.forEach(button => {
-        const rect = button.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-            button.click();
-        }
-    });
-}
+// Remove pinch gesture handling - no more clicking with gestures
 
 function startDrawing(x, y) {
     isDrawing = true;
@@ -212,6 +241,10 @@ function startDrawing(x, y) {
 
 function continueDrawing(x, y) {
     if (!isDrawing) return;
+    
+    // Only draw if movement is significant to reduce noise
+    const minMovement = 3;
+    if (dist(x, y, lastX, lastY) < minMovement) return;
     
     // Add to stroke path for SketchRNN
     const dx = x - lastX;
@@ -367,17 +400,25 @@ function drawStrokeData(strokeData, isCurrentStroke) {
 function drawHandLandmarks(hand) {
     const landmarks = hand.landmarks;
     
-    // Draw index fingertip like in the working example
+    // Draw index fingertip with mapped coordinates
     if (landmarks && landmarks.length > 8) {
         const indexTip = landmarks[8];
+        
+        // Map and mirror coordinates
+        const mappedX = (160 - indexTip[0]) * videoScaleX;
+        const mappedY = indexTip[1] * videoScaleY;
+        
         fill(255, 0, 0);
         noStroke();
-        ellipse(indexTip[0], indexTip[1], 10, 10);
+        ellipse(mappedX, mappedY, 15, 15);
         
         // Also draw thumb tip for gesture debugging
         const thumbTip = landmarks[4];
+        const mappedThumbX = (160 - thumbTip[0]) * videoScaleX;
+        const mappedThumbY = thumbTip[1] * videoScaleY;
+        
         fill(0, 255, 0);
-        ellipse(thumbTip[0], thumbTip[1], 8, 8);
+        ellipse(mappedThumbX, mappedThumbY, 12, 12);
     }
 }
 
@@ -408,6 +449,10 @@ function clearCanvas() {
     nextPen = 'down';
     x = width / 2;
     y = height / 2;
+    // Clear coordinate history to avoid artifacts
+    coordHistory = [];
+    smoothedX = 0;
+    smoothedY = 0;
     updateStatus('Canvas cleared!');
 }
 
@@ -418,11 +463,20 @@ function retrySetup() {
     predictions = [];
     isDrawing = false;
     isAIDrawing = false;
+    coordHistory = [];
+    smoothedX = 0;
+    smoothedY = 0;
     
     // Try to reinitialize
     setTimeout(() => {
         if (video) {
-            handpose = ml5.handpose(video, modelReady);
+            handpose = ml5.handpose(video, {
+                flipHorizontal: true,
+                maxContinuousChecks: Infinity,
+                detectionConfidence: 0.8,
+                scoreThreshold: 0.75,
+                iouThreshold: 0.3
+            }, modelReady);
             handpose.on("predict", gotHands);
         }
     }, 1000);
@@ -430,6 +484,7 @@ function retrySetup() {
 
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
+    calculateVideoMapping(); // Recalculate mapping when window resizes
 }
 
 // Utility functions
@@ -463,6 +518,7 @@ function updateDebugInfo() {
         SketchRNN: ${sketchRNNStatus}<br>
         Category: ${currentCategory}<br>
         Hands: ${handsDetected}<br>
-        Strokes: ${allStrokes.length}
+        Strokes: ${allStrokes.length}<br>
+        Coordinates: (${Math.round(smoothedX)}, ${Math.round(smoothedY)})
     `;
 }
