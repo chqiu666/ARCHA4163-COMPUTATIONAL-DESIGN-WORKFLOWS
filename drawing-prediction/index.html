@@ -216,53 +216,139 @@
             ctx.lineJoin = 'round';
             
             try {
-                // Initialize webcam
+                // Initialize webcam with better error handling
                 updateStatus('Requesting camera access...');
+                
+                // Check permissions first
+                if (navigator.permissions) {
+                    try {
+                        const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+                        console.log('Camera permission status:', permissionStatus.state);
+                        
+                        if (permissionStatus.state === 'denied') {
+                            updateStatus('Camera permission denied. Please allow camera access in browser settings and refresh.');
+                            return;
+                        }
+                    } catch (permError) {
+                        console.log('Could not check camera permissions:', permError);
+                        // Continue anyway as some browsers don't support permissions API
+                    }
+                }
+                
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
+                        width: { ideal: 640, min: 320 },
+                        height: { ideal: 480, min: 240 },
                         facingMode: 'user'
-                    }
+                    },
+                    audio: false
                 });
                 
                 video.srcObject = stream;
                 
-                // Wait for video to be ready
+                // Wait for video to be ready with better promise handling
+                await new Promise((resolve, reject) => {
+                    video.onloadedmetadata = () => {
+                        updateStatus('Camera connected, starting video...');
+                        video.play()
+                            .then(() => {
+                                updateStatus('Camera ready, loading hand tracking...');
+                                resolve();
+                            })
+                            .catch(reject);
+                    };
+                    
+                    video.onerror = (error) => {
+                        console.error('Video error:', error);
+                        reject(new Error('Video playback failed'));
+                    };
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => reject(new Error('Video setup timeout')), 10000);
+                });
+                
+                updateDebugInfo();
+                
+                // Initialize models after video is ready
+                try {
+                    // Initialize handpose with error handling
+                    updateStatus('Loading hand tracking model...');
+                    handpose = ml5.handpose(video, {
+                        flipHorizontal: false,
+                        maxContinuousChecks: 10,
+                        detectionConfidence: 0.8,
+                        scoreThreshold: 0.75,
+                        iouThreshold: 0.3
+                    }, modelReady);
+                    
+                    if (handpose) {
+                        handpose.on('predict', gotHands);
+                    }
+                    
+                    // Initialize SketchRNN with flower model
+                    await loadSketchRNN(currentCategory);
+                    
+                } catch (modelError) {
+                    console.error('Error loading AI models:', modelError);
+                    updateStatus('Error loading AI models. Basic drawing mode enabled.');
+                    // Continue without AI models
+                }
+                
+            } catch (error) {
+                console.error('Error initializing camera:', error);
+                
+                let errorMessage = 'Camera setup failed: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera access denied. Please:';
+                    errorMessage += '<br>1. Click the camera icon in browser address bar';
+                    errorMessage += '<br>2. Select "Allow" for camera access';
+                    errorMessage += '<br>3. Refresh this page';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No camera detected. Please connect a camera and refresh.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = 'Camera is being used by another application. Please close other apps and refresh.';
+                } else if (error.name === 'OverconstrainedError') {
+                    errorMessage = 'Camera constraints not supported. Trying with basic settings...';
+                    // Try again with simpler constraints
+                    setTimeout(() => setupWithBasicConstraints(), 1000);
+                    return;
+                } else {
+                    errorMessage += error.message || 'Unknown error occurred';
+                }
+                
+                document.getElementById('status').innerHTML = errorMessage;
+            }
+        }
+        
+        // Fallback setup with basic camera constraints
+        async function setupWithBasicConstraints() {
+            try {
+                updateStatus('Trying basic camera settings...');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+                
+                video.srcObject = stream;
+                
                 await new Promise((resolve) => {
                     video.onloadedmetadata = () => {
                         video.play().then(resolve).catch(resolve);
                     };
                 });
                 
-                updateStatus('Camera ready, loading hand tracking...');
+                updateStatus('Camera ready with basic settings, loading hand tracking...');
                 updateDebugInfo();
                 
-                // Wait a bit more to ensure video is fully loaded
-                setTimeout(async () => {
-                    try {
-                        // Initialize handpose
-                        handpose = ml5.handpose(video, modelReady);
-                        handpose.on('predict', gotHands);
-                        
-                        // Initialize SketchRNN with flower model
-                        await loadSketchRNN(currentCategory);
-                        
-                    } catch (error) {
-                        console.error('Error loading models:', error);
-                        updateStatus('Error loading AI models. Please refresh the page.');
-                    }
-                }, 1000);
+                // Initialize models
+                handpose = ml5.handpose(video, modelReady);
+                handpose.on('predict', gotHands);
+                await loadSketchRNN(currentCategory);
                 
-            } catch (error) {
-                console.error('Error initializing camera:', error);
-                if (error.name === 'NotAllowedError') {
-                    updateStatus('Camera access denied. Please allow camera permission and refresh.');
-                } else if (error.name === 'NotFoundError') {
-                    updateStatus('No camera found. Please connect a camera and refresh.');
-                } else {
-                    updateStatus('Error accessing camera: ' + error.message);
-                }
+            } catch (fallbackError) {
+                console.error('Fallback camera setup also failed:', fallbackError);
+                updateStatus('Unable to access camera. Please check browser permissions and try again.');
             }
         }
 
@@ -275,11 +361,35 @@
         async function loadSketchRNN(category) {
             updateStatus(`Loading ${category} model...`);
             try {
-                // Use the updated ml5.js SketchRNN API
-                sketchRNN = await ml5.sketchRNN(category);
-                console.log(`SketchRNN ${category} model loaded successfully`);
-                updateStatus(`Ready! ${currentCategory} AI model loaded. Show your hand to start drawing.`);
+                // Use ml5.js SketchRNN with proper callback and error handling
+                sketchRNN = await new Promise((resolve, reject) => {
+                    try {
+                        const model = ml5.sketchRNN(category, (model) => {
+                            console.log(`SketchRNN ${category} model loaded successfully`);
+                            resolve(model);
+                        });
+                        
+                        // Handle case where ml5 doesn't call callback (timeout after 15 seconds)
+                        setTimeout(() => {
+                            if (!sketchRNN) {
+                                console.log('SketchRNN loading timeout, continuing without AI model');
+                                resolve(null);
+                            }
+                        }, 15000);
+                        
+                    } catch (syncError) {
+                        console.error('Synchronous SketchRNN error:', syncError);
+                        reject(syncError);
+                    }
+                });
+                
+                if (sketchRNN) {
+                    updateStatus(`Ready! ${currentCategory} AI model loaded. Show your hand to start drawing.`);
+                } else {
+                    updateStatus(`${category} AI model failed to load. Using basic drawing mode.`);
+                }
                 updateDebugInfo();
+                
             } catch (error) {
                 console.error('Error loading SketchRNN:', error);
                 updateStatus(`Error loading ${category} AI model. Using basic drawing mode.`);
@@ -475,18 +585,61 @@
             try {
                 updateStatus('Generating AI completion...');
                 
-                // For the new ml5.js API, we can either:
-                // 1. Generate from existing strokes (if supported)
-                // 2. Or generate a new drawing from scratch
+                // Try different methods to generate with ml5.js SketchRNN
+                let result = null;
                 
-                // Try to generate a new drawing
-                const result = await sketchRNN.generate();
+                // Method 1: Try to generate from existing strokes if available
+                if (allStrokes.length > 0) {
+                    try {
+                        const seedStrokes = convertStrokesToRNNFormat(allStrokes);
+                        if (seedStrokes.length > 0) {
+                            result = sketchRNN.generate(seedStrokes);
+                        }
+                    } catch (seedError) {
+                        console.log('Could not generate from seed strokes:', seedError);
+                    }
+                }
                 
-                if (result && result.length > 0) {
+                // Method 2: Generate a new drawing from scratch
+                if (!result) {
+                    try {
+                        if (typeof sketchRNN.generate === 'function') {
+                            result = sketchRNN.generate();
+                        } else if (typeof sketchRNN.generateInternal === 'function') {
+                            result = sketchRNN.generateInternal();
+                        }
+                    } catch (generateError) {
+                        console.log('Generate method failed:', generateError);
+                    }
+                }
+                
+                // Method 3: Try callback-based approach
+                if (!result && typeof sketchRNN.generate === 'function') {
+                    result = await new Promise((resolve) => {
+                        try {
+                            sketchRNN.generate((err, data) => {
+                                if (err) {
+                                    console.log('Callback generation error:', err);
+                                    resolve(null);
+                                } else {
+                                    resolve(data);
+                                }
+                            });
+                            
+                            // Timeout after 5 seconds
+                            setTimeout(() => resolve(null), 5000);
+                        } catch (callbackError) {
+                            console.log('Callback setup error:', callbackError);
+                            resolve(null);
+                        }
+                    });
+                }
+                
+                if (result && Array.isArray(result) && result.length > 0) {
                     drawRNNStrokes(result);
                     updateStatus('AI completion added!');
                 } else {
-                    console.log('No result from SketchRNN generation, using fallback');
+                    console.log('No valid result from SketchRNN generation, using fallback');
                     generateFallbackCompletion();
                 }
                 
@@ -750,7 +903,15 @@
         }
 
         function updateStatus(message) {
-            document.getElementById('status').textContent = message;
+            const statusElement = document.getElementById('status');
+            if (statusElement) {
+                // Support HTML in status messages
+                if (message.includes('<br>') || message.includes('<')) {
+                    statusElement.innerHTML = message;
+                } else {
+                    statusElement.textContent = message;
+                }
+            }
             console.log('Status:', message);
         }
 
@@ -785,29 +946,51 @@
         async function checkCameraAvailability() {
             // Check if we're on HTTPS or localhost
             if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                updateStatus('Camera requires HTTPS. Please use localhost or HTTPS.');
+                updateStatus('Camera requires HTTPS. Please use localhost or HTTPS connection.');
                 return false;
             }
             
             // Check if mediaDevices is supported
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                updateStatus('Camera not supported in this browser.');
+                updateStatus('Camera API not supported in this browser. Please use Chrome, Firefox, or Safari.');
                 return false;
             }
             
             try {
+                // Try to enumerate devices (this may require permission in some browsers)
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 
+                console.log('Video devices found:', videoDevices.length);
+                console.log('Video devices:', videoDevices.map(d => d.label || 'Camera'));
+                
                 if (videoDevices.length === 0) {
-                    updateStatus('No camera detected. Please connect a camera and refresh.');
+                    updateStatus('No camera detected. Please connect a camera and refresh the page.');
                     return false;
                 }
                 
-                return true;
+                // Test basic camera access
+                try {
+                    const testStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 1, height: 1 } 
+                    });
+                    // Stop the test stream immediately
+                    testStream.getTracks().forEach(track => track.stop());
+                    console.log('Basic camera access test: SUCCESS');
+                    return true;
+                } catch (testError) {
+                    console.log('Basic camera access test failed:', testError.name);
+                    if (testError.name === 'NotAllowedError') {
+                        updateStatus('Camera permission required. Please allow camera access and try again.');
+                    } else {
+                        updateStatus('Camera access test failed: ' + testError.message);
+                    }
+                    return false;
+                }
+                
             } catch (error) {
-                console.error('Error checking camera:', error);
-                updateStatus('Unable to check camera availability.');
+                console.error('Error checking camera availability:', error);
+                updateStatus('Unable to check camera availability: ' + error.message);
                 return false;
             }
         }
@@ -831,6 +1014,7 @@
             // Reset variables
             handpose = null;
             sketchRNN = null;
+            predictions = [];
             
             // Stop existing video stream if any
             if (video && video.srcObject) {
@@ -841,11 +1025,22 @@
             
             updateDebugInfo();
             
+            // Clear any existing error states
+            document.getElementById('gesture').textContent = 'Retrying...';
+            
             // Wait a moment then retry
             setTimeout(async () => {
-                const cameraAvailable = await checkCameraAvailability();
-                if (cameraAvailable) {
-                    setup();
+                try {
+                    // Force a permission check again
+                    const cameraAvailable = await checkCameraAvailability();
+                    if (cameraAvailable) {
+                        await setup();
+                    } else {
+                        updateStatus('Camera still not available. Please check browser permissions.');
+                    }
+                } catch (retryError) {
+                    console.error('Retry setup error:', retryError);
+                    updateStatus('Retry failed. Please refresh the page.');
                 }
             }, 1000);
         }
