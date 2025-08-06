@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SketchRNN Drawing Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-palette"></i> SketchRNN Drawing Prediction</h1>
+            <p>Draw something and let AI complete your sketch!</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel - Controls -->
+            <div class="control-panel">
+                <div class="section">
+                    <h3><i class="fas fa-cog"></i> Model Settings</h3>
+                    
+                    <div class="control-group">
+                        <label for="modelSelect">Category:</label>
+                        <select id="modelSelect" class="styled-select">
+                            <!-- Models will be populated by JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="temperatureSlider">Temperature: <span id="tempValue">0.5</span></label>
+                        <input type="range" id="temperatureSlider" min="0.1" max="1.0" step="0.05" value="0.5" class="slider">
+                        <small>Lower = more predictable, Higher = more creative</small>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="speedSlider">Drawing Speed: <span id="speedValue">60</span>fps</label>
+                        <input type="range" id="speedSlider" min="10" max="120" step="5" value="60" class="slider">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="strokeWidth">Stroke Width: <span id="strokeValue">2</span>px</label>
+                        <input type="range" id="strokeWidth" min="1" max="10" step="0.5" value="2" class="slider">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="scaleSlider">Drawing Scale: <span id="scaleValue">1.0</span>x</label>
+                        <input type="range" id="scaleSlider" min="0.5" max="3.0" step="0.1" value="1.0" class="slider">
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-paint-brush"></i> Drawing Options</h3>
+                    
+                    <div class="control-group">
+                        <label for="colorPicker">Stroke Color:</label>
+                        <input type="color" id="colorPicker" value="#2196F3" class="color-picker">
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="randomColors" class="checkbox">
+                            Random Colors
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="showStartPoint" class="checkbox" checked>
+                            Show Start Point
+                        </label>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-play-circle"></i> Actions</h3>
+                    
+                    <div class="button-group">
+                        <button id="startBtn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Start Drawing
+                        </button>
+                        <button id="pauseBtn" class="btn btn-secondary" disabled>
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                        <button id="clearBtn" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+
+                    <button id="randomBtn" class="btn btn-accent">
+                        <i class="fas fa-dice"></i> Random Drawing
+                    </button>
+
+                    <button id="saveBtn" class="btn btn-success">
+                        <i class="fas fa-download"></i> Save Image
+                    </button>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-info-circle"></i> Status</h3>
+                    <div class="status-info">
+                        <div class="status-item">
+                            <span class="label">Model:</span>
+                            <span id="currentModel">Loading...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">State:</span>
+                            <span id="drawingState">Ready</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Strokes:</span>
+                            <span id="strokeCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Canvas Area -->
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <div id="p5-container"></div>
+                    <div class="canvas-overlay">
+                        <div id="loadingIndicator" class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading model...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="canvas-info">
+                    <p><i class="fas fa-info"></i> The AI will continue your drawing based on the selected category. 
+                    Adjust temperature for different creativity levels.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by <a href="https://magenta.tensorflow.org/" target="_blank">Magenta.js</a> and 
+            <a href="https://p5js.org/" target="_blank">p5.js</a></p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@magenta/sketch@0.2.0/dist/magentasketch.js"></script>
+    <script src="sketch.js"></script>
+</body>
+</html>
