@@ -150,11 +150,19 @@
     </div>
 
     <div class="instructions">
-        <strong>Hand Gesture Controls:</strong><br>
-        👉 <strong>Point with index finger</strong> - Draw on canvas<br>
-        🤏 <strong>Pinch (thumb + index finger)</strong> - Click buttons<br>
-        ✋ <strong>Open palm</strong> - Clear canvas<br>
-        🎨 <strong>AI Drawing:</strong> After drawing a few strokes, the AI will complete your drawing based on the selected category.<br><br>
+        <strong>Simplified Hand Gesture Controls:</strong><br>
+        👉 <strong>Point with index finger</strong> - Draw on canvas (only gesture for drawing)<br>
+        ✋ <strong>Open palm or other gestures</strong> - Stop drawing<br>
+        🔘 <strong>Use buttons to clear canvas and switch categories</strong><br><br>
+        
+        <strong>🎨 AI Drawing:</strong> After drawing a few strokes, the AI will complete your drawing based on the selected category.<br><br>
+        
+        <strong>🔧 Improvements:</strong><br>
+        • Fixed coordinate mapping for accurate drawing<br>
+        • Added coordinate smoothing to reduce jitter<br>
+        • Simplified gesture recognition for better stability<br>
+        • Mirror-corrected hand tracking for natural interaction<br><br>
+        
         <strong>Troubleshooting:</strong> If camera doesn't work, check browser permissions, ensure you're on localhost or HTTPS, and try refreshing.
         <button onclick="retrySetup()" style="margin-top: 10px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Retry Camera Setup</button>
     </div>
