@@ -122,6 +122,20 @@
             min-width: 100px;
             text-align: center;
         }
+
+        .debug-info {
+            position: absolute;
+            bottom: 200px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            z-index: 100;
+            max-width: 200px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -139,13 +153,20 @@
 
     <div class="status" id="status">Loading models...</div>
     <div class="gesture-indicator" id="gesture">No hand detected</div>
+    <div class="debug-info" id="debug">
+        Camera: Not initialized<br>
+        HandPose: Not loaded<br>
+        SketchRNN: Not loaded
+    </div>
 
     <div class="instructions">
         <strong>Hand Gesture Controls:</strong><br>
         👉 <strong>Point with index finger</strong> - Draw on canvas<br>
         🤏 <strong>Pinch (thumb + index finger)</strong> - Click buttons<br>
         ✋ <strong>Open palm</strong> - Clear canvas<br>
-        🎨 <strong>AI Drawing:</strong> After drawing a few strokes, the AI will complete your drawing based on the selected category.
+        🎨 <strong>AI Drawing:</strong> After drawing a few strokes, the AI will complete your drawing based on the selected category.<br><br>
+        <strong>Troubleshooting:</strong> If camera doesn't work, check browser permissions, ensure you're on localhost or HTTPS, and try refreshing.
+        <button onclick="retrySetup()" style="margin-top: 10px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Retry Camera Setup</button>
     </div>
 
     <!-- TensorFlow.js -->
@@ -196,42 +217,81 @@
             
             try {
                 // Initialize webcam
+                updateStatus('Requesting camera access...');
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 640, height: 480 }
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    }
                 });
+                
                 video.srcObject = stream;
                 
-                // Initialize handpose
-                handpose = ml5.handpose(video, modelReady);
-                handpose.on('predict', gotHands);
+                // Wait for video to be ready
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        video.play().then(resolve).catch(resolve);
+                    };
+                });
                 
-                // Initialize SketchRNN with flower model
-                await loadSketchRNN(currentCategory);
+                updateStatus('Camera ready, loading hand tracking...');
+                updateDebugInfo();
                 
-                updateStatus('Ready! Show your hand to start drawing.');
+                // Wait a bit more to ensure video is fully loaded
+                setTimeout(async () => {
+                    try {
+                        // Initialize handpose
+                        handpose = ml5.handpose(video, modelReady);
+                        handpose.on('predict', gotHands);
+                        
+                        // Initialize SketchRNN with flower model
+                        await loadSketchRNN(currentCategory);
+                        
+                    } catch (error) {
+                        console.error('Error loading models:', error);
+                        updateStatus('Error loading AI models. Please refresh the page.');
+                    }
+                }, 1000);
                 
             } catch (error) {
-                console.error('Error initializing:', error);
-                updateStatus('Error: Please allow camera access and refresh the page.');
+                console.error('Error initializing camera:', error);
+                if (error.name === 'NotAllowedError') {
+                    updateStatus('Camera access denied. Please allow camera permission and refresh.');
+                } else if (error.name === 'NotFoundError') {
+                    updateStatus('No camera found. Please connect a camera and refresh.');
+                } else {
+                    updateStatus('Error accessing camera: ' + error.message);
+                }
             }
         }
 
         function modelReady() {
             console.log('Handpose model ready!');
+            updateStatus('Hand tracking ready! Show your hand to start drawing.');
+            updateDebugInfo();
         }
 
         async function loadSketchRNN(category) {
             updateStatus(`Loading ${category} model...`);
             try {
-                sketchRNN = ml5.sketchRNN(category, sketchRNNReady);
+                // Use the updated ml5.js SketchRNN API
+                sketchRNN = await ml5.sketchRNN(category);
+                console.log(`SketchRNN ${category} model loaded successfully`);
+                updateStatus(`Ready! ${currentCategory} AI model loaded. Show your hand to start drawing.`);
+                updateDebugInfo();
             } catch (error) {
                 console.error('Error loading SketchRNN:', error);
-                updateStatus('Error loading AI model');
+                updateStatus(`Error loading ${category} AI model. Using basic drawing mode.`);
+                sketchRNN = null; // Set to null so we know it failed
+                updateDebugInfo();
             }
         }
 
         function sketchRNNReady() {
-            updateStatus(`${currentCategory} model ready!`);
+            // This function is no longer needed with the async/await approach
+            updateStatus(`Ready! ${currentCategory} AI model loaded. Show your hand to start drawing.`);
+            updateDebugInfo();
         }
 
         function gotHands(results) {
@@ -405,22 +465,175 @@
             strokePath = [];
         }
 
-        function generateAICompletion() {
-            if (!sketchRNN) return;
+        async function generateAICompletion() {
+            if (!sketchRNN) {
+                console.log('SketchRNN not loaded, using fallback completion');
+                generateFallbackCompletion();
+                return;
+            }
             
             try {
-                // Convert strokes to SketchRNN format
-                const rnnStrokes = convertStrokesToRNNFormat(allStrokes);
+                updateStatus('Generating AI completion...');
                 
-                // Generate completion
-                sketchRNN.generate(rnnStrokes, (error, result) => {
-                    if (!error && result) {
-                        drawRNNStrokes(result);
-                    }
-                });
+                // For the new ml5.js API, we can either:
+                // 1. Generate from existing strokes (if supported)
+                // 2. Or generate a new drawing from scratch
+                
+                // Try to generate a new drawing
+                const result = await sketchRNN.generate();
+                
+                if (result && result.length > 0) {
+                    drawRNNStrokes(result);
+                    updateStatus('AI completion added!');
+                } else {
+                    console.log('No result from SketchRNN generation, using fallback');
+                    generateFallbackCompletion();
+                }
+                
             } catch (error) {
                 console.error('Error generating AI completion:', error);
+                updateStatus('AI completion failed, using simple completion');
+                generateFallbackCompletion();
             }
+        }
+
+        function generateFallbackCompletion() {
+            // Simple geometric completion based on category
+            const completions = {
+                'flower': drawSimpleFlower,
+                'cat': drawSimpleCat,
+                'pig': drawSimplePig,
+                'face': drawSimpleFace
+            };
+            
+            const drawFunction = completions[currentCategory] || drawSimpleFlower;
+            drawFunction();
+            updateStatus('Simple completion added!');
+        }
+
+        function drawSimpleFlower() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Draw petals
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * Math.PI * 2) / 8;
+                const x1 = centerX + Math.cos(angle) * 30;
+                const y1 = centerY + Math.sin(angle) * 30;
+                const x2 = centerX + Math.cos(angle) * 60;
+                const y2 = centerY + Math.sin(angle) * 60;
+                
+                ctx.beginPath();
+                ctx.arc(x2, y2, 15, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw center
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+        }
+
+        function drawSimpleCat() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Ears
+            ctx.beginPath();
+            ctx.moveTo(centerX - 25, centerY - 25);
+            ctx.lineTo(centerX - 15, centerY - 50);
+            ctx.lineTo(centerX - 5, centerY - 25);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX + 25, centerY - 25);
+            ctx.lineTo(centerX + 15, centerY - 50);
+            ctx.lineTo(centerX + 5, centerY - 25);
+            ctx.stroke();
+            
+            // Eyes
+            ctx.beginPath();
+            ctx.arc(centerX - 15, centerY - 10, 3, 0, Math.PI * 2);
+            ctx.arc(centerX + 15, centerY - 10, 3, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+        }
+
+        function drawSimplePig() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 45, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Snout
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 15, 20, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Ears
+            ctx.beginPath();
+            ctx.arc(centerX - 25, centerY - 25, 15, 0, Math.PI * 2);
+            ctx.arc(centerX + 25, centerY - 25, 15, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+        }
+
+        function drawSimpleFace() {
+            const centerX = lastX || canvas.width / 2;
+            const centerY = lastY || canvas.height / 2;
+            
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Eyes
+            ctx.beginPath();
+            ctx.arc(centerX - 20, centerY - 15, 5, 0, Math.PI * 2);
+            ctx.arc(centerX + 20, centerY - 15, 5, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Nose
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 5);
+            ctx.lineTo(centerX - 5, centerY + 5);
+            ctx.lineTo(centerX + 5, centerY + 5);
+            ctx.stroke();
+            
+            // Mouth
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 5, 20, 0, Math.PI);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
         }
 
         function convertStrokesToRNNFormat(strokes) {
@@ -441,33 +654,53 @@
         }
 
         function drawRNNStrokes(strokes) {
-            ctx.strokeStyle = '#666';
-            ctx.lineWidth = 2;
+            if (!strokes || !Array.isArray(strokes) || strokes.length === 0) {
+                console.log('Invalid strokes data:', strokes);
+                return;
+            }
             
-            let x = lastX;
-            let y = lastY;
+            ctx.strokeStyle = '#ff6b6b'; // Use a different color for AI-generated strokes
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.7; // Make AI strokes slightly transparent
+            
+            // Start from center of canvas if no previous drawing
+            let x = lastX || canvas.width / 2;
+            let y = lastY || canvas.height / 2;
             
             ctx.beginPath();
             ctx.moveTo(x, y);
             
-            for (let stroke of strokes) {
-                x += stroke[0];
-                y += stroke[1];
+            // Handle different possible data formats
+            for (let i = 0; i < strokes.length; i++) {
+                const stroke = strokes[i];
                 
-                if (stroke[2] === 0) {
-                    // Pen down
-                    ctx.lineTo(x, y);
-                } else {
-                    // Pen up
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
+                if (Array.isArray(stroke) && stroke.length >= 2) {
+                    // Format: [dx, dy, pen]
+                    x += stroke[0] * 2; // Scale up the movements
+                    y += stroke[1] * 2;
+                    
+                    // Keep drawing within canvas bounds
+                    x = Math.max(0, Math.min(canvas.width, x));
+                    y = Math.max(0, Math.min(canvas.height, y));
+                    
+                    if (stroke.length >= 3 && stroke[2] === 1) {
+                        // Pen up - finish current stroke and start new one
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                    } else {
+                        // Pen down - continue drawing
+                        ctx.lineTo(x, y);
+                    }
                 }
             }
             
             ctx.stroke();
+            
+            // Reset drawing context
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
+            ctx.globalAlpha = 1.0;
         }
 
         function selectCategory(category) {
@@ -518,6 +751,24 @@
 
         function updateStatus(message) {
             document.getElementById('status').textContent = message;
+            console.log('Status:', message);
+        }
+
+        function updateDebugInfo() {
+            const debugElement = document.getElementById('debug');
+            const cameraStatus = video && video.readyState === 4 ? 'Ready' : 'Not ready';
+            const handposeStatus = handpose ? 'Loaded' : 'Not loaded';
+            const sketchRNNStatus = sketchRNN ? 'Loaded' : (sketchRNN === null ? 'Failed' : 'Loading...');
+            const handsDetected = predictions.length > 0 ? 'Yes' : 'No';
+            
+            debugElement.innerHTML = `
+                Camera: ${cameraStatus}<br>
+                HandPose: ${handposeStatus}<br>
+                SketchRNN: ${sketchRNNStatus}<br>
+                Category: ${currentCategory}<br>
+                Hands: ${handsDetected}<br>
+                Strokes: ${allStrokes.length}
+            `;
         }
 
         function resizeCanvas() {
@@ -530,8 +781,74 @@
             resizeCanvas();
         });
 
+        // Check camera availability first
+        async function checkCameraAvailability() {
+            // Check if we're on HTTPS or localhost
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                updateStatus('Camera requires HTTPS. Please use localhost or HTTPS.');
+                return false;
+            }
+            
+            // Check if mediaDevices is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                updateStatus('Camera not supported in this browser.');
+                return false;
+            }
+            
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                
+                if (videoDevices.length === 0) {
+                    updateStatus('No camera detected. Please connect a camera and refresh.');
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error checking camera:', error);
+                updateStatus('Unable to check camera availability.');
+                return false;
+            }
+        }
+        
         // Initialize when page loads
-        window.addEventListener('load', setup);
+        window.addEventListener('load', async () => {
+            // Start debug info updates
+            setInterval(updateDebugInfo, 2000); // Update every 2 seconds
+            
+            // First check if camera is available
+            const cameraAvailable = await checkCameraAvailability();
+            if (cameraAvailable) {
+                setup();
+            }
+        });
+
+        // Retry setup function
+        async function retrySetup() {
+            updateStatus('Retrying camera setup...');
+            
+            // Reset variables
+            handpose = null;
+            sketchRNN = null;
+            
+            // Stop existing video stream if any
+            if (video && video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            
+            updateDebugInfo();
+            
+            // Wait a moment then retry
+            setTimeout(async () => {
+                const cameraAvailable = await checkCameraAvailability();
+                if (cameraAvailable) {
+                    setup();
+                }
+            }, 1000);
+        }
 
         // Set initial category
         selectCategory('flower');
