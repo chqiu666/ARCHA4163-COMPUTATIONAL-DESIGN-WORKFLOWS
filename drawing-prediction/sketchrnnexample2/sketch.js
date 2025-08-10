@@ -4,10 +4,35 @@ let x, y
 let nextPen = 'down'
 let seedPath = []
 let personDrawing = false
+let currentModel = 'bird'
 
 function preload() {
-  sketchRNN = ml5.sketchRNN('bird')
+  sketchRNN = ml5.sketchRNN(currentModel)
   //type in the 'quotation' box an object you want to draw, for example: bird, cat, dog, flower, and the sketchRNN will try to finish it for you
+}
+
+function switchModel(modelName) {
+  currentModel = modelName
+  sketchRNN = ml5.sketchRNN(modelName)
+  console.log('切换到模型:', modelName)
+  
+  // 更新按钮状态
+  document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('active'))
+  document.getElementById(modelName + '-btn').classList.add('active')
+  
+  restartDrawing()
+}
+
+function restartDrawing() {
+  background(255)
+  seedPath = []
+  currentStroke = null
+  nextPen = 'down'
+  personDrawing = false
+  x = width / 2
+  y = height / 2
+  loop()
+  console.log('重新开始绘制')
 }
 
 function startDrawing() {
@@ -22,7 +47,7 @@ function sketchRNNStart() {
 }
 
 function setup() {
-  let canvas = createCanvas(400, 400);
+  let canvas = createCanvas(1920, 1080);
   canvas.mousePressed(startDrawing)
   canvas.mouseReleased(sketchRNNStart)
   console.log("model.loaded")

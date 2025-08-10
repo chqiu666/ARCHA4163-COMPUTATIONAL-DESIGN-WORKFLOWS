@@ -1,8 +1,90 @@
 html, body {
     margin: 0;
     padding: 0;
-  }
-  canvas {
-    display: block;
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f5f5;
   }
   
+  canvas {
+    display: block;
+    margin: 20px auto;
+    border: 2px solid #333;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .controls {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    margin: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  
+  .model-buttons h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 18px;
+  }
+  
+  .model-btn {
+    margin: 5px;
+    padding: 10px 20px;
+    border: 2px solid #007bff;
+    background: white;
+    color: #007bff;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .model-btn:hover {
+    background: #007bff;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+  }
+  
+  .model-btn.active {
+    background: #007bff;
+    color: white;
+  }
+  
+  .action-buttons {
+    margin: 20px 0;
+  }
+  
+  .restart-btn {
+    padding: 12px 30px;
+    border: none;
+    background: #28a745;
+    color: white;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .restart-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+  }
+  
+  .instructions {
+    margin-top: 15px;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .instructions p {
+    margin: 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+  }

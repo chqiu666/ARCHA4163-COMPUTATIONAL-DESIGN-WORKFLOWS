@@ -10,6 +10,22 @@
 
   </head>
   <body>
+    <div class="controls">
+      <div class="model-buttons">
+        <h3>选择绘画模型:</h3>
+        <button onclick="switchModel('bird')" class="model-btn active" id="bird-btn">小鸟 (Bird)</button>
+        <button onclick="switchModel('flower')" class="model-btn" id="flower-btn">花朵 (Flower)</button>
+        <button onclick="switchModel('face')" class="model-btn" id="face-btn">人脸 (Face)</button>
+        <button onclick="switchModel('butterfly')" class="model-btn" id="butterfly-btn">蝴蝶 (Butterfly)</button>
+        <button onclick="switchModel('cat')" class="model-btn" id="cat-btn">小猫 (Cat)</button>
+      </div>
+      <div class="action-buttons">
+        <button onclick="restartDrawing()" class="restart-btn">重新开始绘制</button>
+      </div>
+      <div class="instructions">
+        <p>使用方法：按住鼠标拖拽开始绘制，松开鼠标让AI继续完成绘画</p>
+      </div>
+    </div>
     <script src="sketch.js"></script>
   </body>
 </html>
