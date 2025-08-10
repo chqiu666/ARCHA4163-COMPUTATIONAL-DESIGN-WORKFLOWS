@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusEl = document.getElementById('status');
 
   // Replace with your own key for local testing only (DO NOT COMMIT REAL KEYS)
-  const OPENAI_API_KEY = 'your-openai-api-key-here';
+  const OPENAI_API_KEY = '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';
   const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
   let lastCallMs = 0;
