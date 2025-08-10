@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agents Assignment – Simple AI Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-left">Columbia GSAPP</div>
+    <div class="brand-center">
+      Computational Design Workflows<br />
+      <span>Part 8 – Agents</span>
+    </div>
+    <div class="brand-right">Assignment</div>
+  </header>
+
+  <main class="container">
+    <section class="intro">
+      <h1>Simple AI Assistant</h1>
+      <p>
+        This page implements a minimal agent-style chat interface using the OpenAI Chat Completions API.
+        Replace the placeholder API key in <code>app.js</code> to test locally. For production, use a backend
+        (e.g., Firebase Functions) to keep secrets secure.
+      </p>
+    </section>
+
+    <section class="chat">
+      <div id="chat-messages" class="chat-messages">
+        <div class="message bot">
+          <div class="bubble"><strong>AI Assistant:</strong> Hello! How can I help you today?</div>
+          <div class="meta">Just now</div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <input id="message-input" type="text" placeholder="Type your message..." maxlength="500" />
+        <button id="send-button" class="primary">Send</button>
+      </div>
+
+      <div id="status" class="status">Ready</div>
+    </section>
+
+    <section class="notes">
+      <h2>Notes</h2>
+      <ul>
+        <li>Set your OpenAI API key in <code>app.js</code> (<code>OPENAI_API_KEY</code>).</li>
+        <li>Do not expose API keys in public deployments. Use a secure server.</li>
+        <li>This demo keeps messages only in memory; refresh clears the conversation.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

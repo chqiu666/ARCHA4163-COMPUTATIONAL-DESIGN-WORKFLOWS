@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agents Assignment – Secure AI Assistant (Firebase Functions)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-left">Columbia GSAPP</div>
+    <div class="brand-center">
+      Computational Design Workflows<br />
+      <span>Part 8 – Agents (Secure)</span>
+    </div>
+    <div class="brand-right">Assignment</div>
+  </header>
+
+  <main class="container">
+    <section class="intro">
+      <h1>Secure AI Assistant</h1>
+      <p>
+        This version routes all AI requests through a Firebase Cloud Function, keeping your OpenAI API key on the
+        server. Sign in first, then chat securely.
+      </p>
+    </section>
+
+    <section class="chat">
+      <div style="margin-bottom:12px">
+        <button id="login-btn" class="primary">Login with Google</button>
+        <button id="logout-btn" style="display:none">Logout</button>
+        <span id="auth-status" class="status">Not authenticated</span>
+      </div>
+
+      <div id="chat-messages" class="chat-messages">
+        <div class="message bot">
+          <div class="bubble"><strong>AI Assistant:</strong> Please login to start chatting.</div>
+          <div class="meta">Just now</div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <input id="message-input" type="text" placeholder="Type your message..." maxlength="500" disabled />
+        <button id="send-button" class="primary" disabled>Send</button>
+      </div>
+
+      <div id="status" class="status">Authentication required</div>
+    </section>
+  </main>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-functions-compat.js"></script>
+  <script src="secure-openai.js"></script>
+</body>
+<!-- End -->
+</html>
