@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Gradient Animation - Cargosite Style</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Half -->
+        <div class="left-half">
+            <div class="content">
+                <h1>Interactive</h1>
+                <h2>Gradient Animation</h2>
+                <p>Move your cursor to the right half to see the magic</p>
+            </div>
+        </div>
+        
+        <!-- Right Half -->
+        <div class="right-half" id="interactive-area">
+            <canvas id="gradient-canvas"></canvas>
+            <div id="ascii-overlay"></div>
+        </div>
+    </div>
+    
+    <script src="gradient-animation.js"></script>
+    <script src="ascii-effect.js"></script>
+</body>
+</html>
