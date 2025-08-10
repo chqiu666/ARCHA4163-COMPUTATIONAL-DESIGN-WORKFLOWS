@@ -2129,7 +2129,7 @@ shop-product {--font-size: 1.2rem;}
 shop-product {font-size: calc(var(--font-scale) * var(--font-size));}
 audio-player {--font-size: 1.2rem;}
 audio-player {font-size: calc(var(--font-scale) * var(--font-size));}
-</style><style id="link-styles">a.caption { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.caption {  } a.diatype-small { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.diatype-small {  } a.diatype-title { color: rgba(0, 0, 0, 0.75); text-decoration: none; } a:hover.diatype-title {  } a.github-icon-adjust { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.github-icon-adjust {  } a.advise { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.advise {  } </style><style id="font-feature-settings-styles"></style><div class="content"><div class="pages" style="margin-top: 0px; margin-bottom: 0px;"><div id="C0678842984" page-url="main-page" class="page" style="--pin-padding-top: 0px; --pin-padding-bottom: 0px;"><div class="backdrop "><div class="backdrop-contents visible inside loaded" style="--backdrop-width: 756px; --backdrop-height: 857px;"><div class="gradient"><template shadowrootmode="open"><style>:host {
+</style><style id="link-styles">a.caption { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.caption {  } a.diatype-small { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.diatype-small {  } a.diatype-title { color: rgba(0, 0, 0, 0.75); text-decoration: none; } a:hover.diatype-title {  } a.github-icon-adjust { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.github-icon-adjust {  } a.advise { color: rgba(0, 0, 0, 0.75); text-decoration: underline; } a:hover.advise {  } </style><style id="font-feature-settings-styles"></style><div class="content"><div class="pages" style="margin-top: 0px; margin-bottom: 0px;"><div id="C0678842984" page-url="main-page" class="page" style="--pin-padding-top: 0px; --pin-padding-bottom: 0px;"><div class="backdrop "><div class="backdrop-contents visible inside loaded" style="--backdrop-width: 756px; --backdrop-height: 857px;"><div class="gradient" uses="backdrop-gradient" animation-speed="-85" style="--animation-speed: -85; --animation-direction: reverse;"><template shadowrootmode="open"><style>:host {
 						background-image: repeating-radial-gradient( circle at 50% 50%, #ffffff 52.9825959877771%, #0099ff 102.9825959877771%, #0099ff 102.9825959877771%, #ffffff 152.9825959877771%, #ffffff 152.9825959877771%);
 					    position: absolute;
 					    top: 0;
@@ -2138,9 +2138,20 @@ audio-player {font-size: calc(var(--font-scale) * var(--font-size));}
 					    bottom: 0;
 					    margin: auto;
 					    background-position: 0 0;
-					    background-size: 100% 100%;
-					    false
-					    false
+					    background-size: 200% 200%;
+					    animation: gradient-move 1.2s linear infinite reverse;
+					}
+					
+					@keyframes gradient-move {
+						0% {
+							background-position: 0% 50%;
+						}
+						50% {
+							background-position: 100% 50%;
+						}
+						100% {
+							background-position: 0% 50%;
+						}
 					}
 
 					
