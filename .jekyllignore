@@ -1,0 +1,10 @@
+cat > .jekyllignore <<'EOF'
+node_modules/
+**/node_modules/**
+cyberneticzoo-network-viz/
+cyberneticzoo-network-viz/**
+EOF
+
+git add .jekyllignore
+git commit -m "fix(pages): ignore node_modules & submodule for Jekyll build"
+git push
