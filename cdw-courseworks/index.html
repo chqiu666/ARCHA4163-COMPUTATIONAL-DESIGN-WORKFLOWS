@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Computational Design Workflows</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        @font-face {
+            font-display: block;
+            font-family: "Diatype Variable";
+            src: url("https://type.cargo.site/files/Cargo-DiatypePlusVariable.woff2") format("woff2-variations");
+            font-style: normal;
+            font-weight: 200 1000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Diatype Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Left gradient section */
+        .gradient-section {
+            width: 50%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transition: filter 0.3s ease;
+        }
+
+        .gradient-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-radial-gradient(
+                circle at 50% 50%, 
+                #ffffff 0%, 
+                #ffffff 10%, 
+                #0099ff 10%, 
+                #0099ff 20%, 
+                #ffffff 20%
+            );
+            background-size: 200% 200%;
+            animation: gradientMove 8s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            0% {
+                background-position: 0% 0%;
+            }
+            100% {
+                background-position: 100% 100%;
+            }
+        }
+
+        /* Reverse effect on hover */
+        .gradient-section.reverse {
+            filter: invert(1);
+        }
+
+        /* P5.js ASCII canvas */
+        #ascii-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        .gradient-section.show-ascii #ascii-canvas {
+            opacity: 0.8;
+        }
+
+        /* Right content section */
+        .content-section {
+            width: 50%;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .content-section h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #0198ff;
+            margin-bottom: 40px;
+            line-height: 1.2;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            color: #000000;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 400;
+            display: inline-block;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a::before {
+            content: "";
+            position: absolute;
+            left: -20px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover::before {
+            content: "\\";
+            opacity: 1;
+            left: -15px;
+        }
+
+        .nav-links a:hover {
+            color: #0198ff;
+            transform: translateX(5px);
+        }
+
+        /* Header info */
+        .header-info {
+            position: absolute;
+            top: 40px;
+            right: 60px;
+            text-align: right;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .gradient-section,
+            .content-section {
+                width: 100%;
+                height: 50vh;
+            }
+
+            .content-section {
+                padding: 40px;
+            }
+
+            .header-info {
+                top: 20px;
+                right: 20px;
+                font-size: 14px;
+            }
+
+            .content-section h1 {
+                font-size: 36px;
+            }
+
+            .nav-links a {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left gradient section -->
+        <div class="gradient-section" id="gradientSection">
+            <div class="gradient-animation"></div>
+            <div id="ascii-canvas"></div>
+        </div>
+
+        <!-- Right content section -->
+        <div class="content-section">
+            <div class="header-info">
+                2025<br>
+                Columbia GSAPP<br>
+                Yuhang Qiu
+            </div>
+
+            <h1>Computational<br>Design Workflows</h1>
+
+            <ul class="nav-links">
+                <li><a href="https://chqiu666.github.io/ARCHA4163-COMPUTATIONAL-DESIGN-WORKFLOWS/part4-Spatial%20Canvas/" class="nav-link">Spatial canvas</a></li>
+                <li><a href="https://chqiu666.github.io/ARCHA4163-COMPUTATIONAL-DESIGN-WORKFLOWS/part5-Temporal-Structures/" class="nav-link">Temporal structure</a></li>
+                <li><a href="https://chqiu666.github.io/ARCHA4163-COMPUTATIONAL-DESIGN-WORKFLOWS/part6-Relational-Structures/" class="nav-link">Relational structure</a></li>
+                <li><a href="https://chqiu666.github.io/ARCHA4163-COMPUTATIONAL-DESIGN-WORKFLOWS/part7-Geospatial-Structures/" class="nav-link">Geospatial structure</a></li>
+                <li><a href="https://chqiu666.github.io/ARCHA4163-COMPUTATIONAL-DESIGN-WORKFLOWS/part8-Engagement-Components/" class="nav-link">Engagement component</a></li>
+                <li><a href="https://chqiu666.github.io/ARCHA4163-COMPUTATIONAL-DESIGN-WORKFLOWS/part9-agents/Assignment/" class="nav-link">Agent</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // P5.js ASCII effect
+        let asciiDiv;
+        let video;
+        let asciiChars = ['@', '#', 'S', '%', '?', '*', '+', ';', ':', ',', '.'];
+
+        function setup() {
+            let canvas = createCanvas(windowWidth / 2, windowHeight);
+            canvas.parent('ascii-canvas');
+            
+            // Create video capture for ASCII effect
+            video = createCapture(VIDEO);
+            video.size(64, 48);
+            video.hide();
+            
+            asciiDiv = createDiv('');
+            asciiDiv.parent('ascii-canvas');
+            asciiDiv.style('font-family', 'monospace');
+            asciiDiv.style('font-size', '8px');
+            asciiDiv.style('line-height', '6px');
+            asciiDiv.style('position', 'absolute');
+            asciiDiv.style('top', '0');
+            asciiDiv.style('left', '0');
+            asciiDiv.style('color', '#0099ff');
+            asciiDiv.style('white-space', 'pre');
+            asciiDiv.style('width', '100%');
+            asciiDiv.style('height', '100%');
+            asciiDiv.style('overflow', 'hidden');
+        }
+
+        function draw() {
+            clear();
+            video.loadPixels();
+            let asciiImage = '';
+            
+            for (let j = 0; j < video.height; j++) {
+                for (let i = 0; i < video.width; i++) {
+                    const pixelIndex = (i + j * video.width) * 4;
+                    const r = video.pixels[pixelIndex + 0];
+                    const g = video.pixels[pixelIndex + 1];
+                    const b = video.pixels[pixelIndex + 2];
+                    const brightness = (r + g + b) / 3;
+                    const charIndex = floor(map(brightness, 0, 255, asciiChars.length - 1, 0));
+                    asciiImage += asciiChars[charIndex];
+                }
+                asciiImage += '\n';
+            }
+            
+            asciiDiv.html(asciiImage);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth / 2, windowHeight);
+        }
+
+        // Hover effects
+        const gradientSection = document.getElementById('gradientSection');
+        const navLinks = document.querySelectorAll('.nav-link');
+        let isHovering = false;
+
+        navLinks.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                isHovering = true;
+                gradientSection.classList.add('reverse');
+                gradientSection.classList.add('show-ascii');
+            });
+
+            link.addEventListener('mouseleave', () => {
+                isHovering = false;
+                setTimeout(() => {
+                    if (!isHovering) {
+                        gradientSection.classList.remove('reverse');
+                        gradientSection.classList.remove('show-ascii');
+                    }
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
