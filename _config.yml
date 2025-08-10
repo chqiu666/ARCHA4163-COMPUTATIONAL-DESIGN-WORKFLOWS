@@ -1,0 +1,27 @@
+cat > _config.yml <<'YAML'
+theme: jekyll-theme-primer
+
+# 明确排除不该被渲染的目录/文件
+exclude:
+  - node_modules
+  - '**/node_modules/**'
+  - cyberneticzoo-network-viz
+  - 'cyberneticzoo-network-viz/**'
+  - vendor
+  - Gemfile
+  - Gemfile.lock
+
+# 可选：只让根目录下这些常规文件参与站点（按需删改）
+include:
+  - index.md
+  - index.html
+  - assets
+  - css
+  - js
+  - _posts
+  - _pages
+YAML
+
+git add _config.yml
+git commit -m "fix(pages): exclude submodule & node_modules from Jekyll build"
+git push
